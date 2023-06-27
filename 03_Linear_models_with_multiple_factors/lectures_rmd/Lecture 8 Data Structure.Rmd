@@ -1,0 +1,218 @@
+---
+title: "Lecture 8 Introduction to Data Structure"
+author: "T. Neeman"
+date: "26th August 2022"
+output: pdf_document
+---
+
+## Data Structure
+
+Data structure is a fundamental idea in biological data science, but it is not discussed much in the traditional data science literature. In biology, we measure responses on samples that are related or that share a common environment. Measurements from samples that share a common environment will be more correlated that measurements from samples from different environments. Here are some specific examples:
+
+* Measurements from two leaves on a plant are more correlated than measurements from two leaves on two different plants.
+
+* Measurements from two mice in the same litter are more correlated than measurements from two mice from different litters. 
+
+* Measurements from two mice who share a cage are more correlated than measurements from two mice from different cages.
+
+It's important to capture this correlation structure in our statistical model, because it can have a substantial impact on statistical inference. There are two mistakes we can make by failing to account for the structure (relatedness, common environment). Under one scenario, we might claim there is a treatment effect when the treatment effect is confounded or partially confounded with an environmental effect. Under a second scenario, we could fail to see a treatment effect because treatment differences were masked by differing environments.
+
+Let's explore these two scenarios with a couple of examples:
+
+## Example 1: Heights of HDR students at RSB and JCSMR
+
+We are interested in the hypothesis that HDR students at JCSMR are taller on average than HDR students at RSB. Our experimental plan is to select 25 students at random from each school and measure their height. But COVID hits, and we can only find 1 student from each school, so we measure each student 25 times. Now we have our 50 measurements. Can we make the same inference as if we had measurements on 50 students?
+
+## Example 2: Repeating experiments
+
+We have set up a bacterial growth assay for comparing growth rates between wild-type and several genetically modified bacteria. We have run the experiment multiple times. There is considerable variation between experiments. In fact the "experiment effect" is stronger than the genotype effect. When we combine all the measurements across the multiple experimental runs, we fail to see a difference between the mutants and the control. 
+
+## A few comments on these examples
+
+In *Example 1* , the only information we gain in this study is a measure of how reliable our measuring tool is. The total information about height differences comes from a sample of 2. So this study has much less information about height differences than a study with 50 *independent* measurements, even though both studies have 50 measurements.
+
+In *Example 2*, information about the genotype effect is measured within each experiment. Our analysis should ideally *combine* the information from each experiment across the set of experiments. The large variation *between* experiments is not relevant to the genotype question. Recognising that the overall measurement variation can be partitioned into between-experiment variation, and within-experiment variation, statistical inference about genotype effects should be wrt within-experiment variation. 
+
+
+## Orange-bellied parrots 
+Reference: Stojanovic D. et al (2020), Nestling growth and body condition of critically endangered Orange-bellied Parrots Neophema chrysogaster,Emu - Austral Ornithology 120:2, pp135-141
+
+The Orange-bellied Parrot (OBP) is a small migratory parrot, which breeds only in coastal south-west Tasmania and winters in coastal Victoria and South Australia. The species’ current breeding range is a narrow coastal strip of south-west Tasmania near Melaleuca. Orange-bellied Parrots may be the most endangered parrot in the world; in 2016 only two wild-born females bred in the last wild population (Stojanovic et al. 2018). 
+
+ANU researchers and conservationists developed an OBP-specific body condition index for nestlings in order to monitor nestling success and access the potential factors predictive of body condition. They have measurements for 106 nestlings from 35 nests across 4 years. 
+
+In this analysis, they focus on whether relative hatch order affects body condition. Because nests have different brood sizes, they classified nestlings as (1) first-hatched, (2) last-hatched, (3) middle-hatched.
+ 
+ Nest (eventid) is a potential source of variation for body condition. Hatch order should be compared within a nest, and order effects averaged across nests. Year is also potentially predictive of body condition. In this case, we treat it as a fixed effect because it is a factor of interest.
+ 
+ First we'll import our libraries, and then have a closer look at this experiment.
+
+```{r libraries, message = FALSE}
+library(tidyverse)
+library(lmerTest)
+library(ggResidpanel)
+library(emmeans)
+```
+
+### Import and check data structure
+
+```{r parrots}
+obp <-read_csv("../Data/contemporary obp nestlings.csv")
+glimpse(obp)
+obp %>%
+  group_by(year, eventid)%>%
+  summarise(count = n())
+```
+
+### Data exploration
+
+Body condition index is the variable "wgtdiff". We can explore order effects on body condition: wgtdiff on the y-axis and including year and order on the x-axis or colour. To visualise patterns in order, we put the levels of the factor order in "order": first, middle, last.
+
+```{r}
+obp$order<- factor(obp$order, levels = c("first","middle","last"))
+
+ggplot(obp,aes(x=order,y=wgtdif,colour=factor(year)))+
+  geom_point(position = position_dodge(width = 0.4))
+ggplot(obp,aes(x= factor(year),y=wgtdif,colour=order))+
+  geom_point(position = position_dodge(width = 0.2))
+```
+
+We can try sub-dividing to the nest (eventid) level. This may give us some direct insight into order effects, and it may also lead to questions about the data! Which nest have no information about order effects? How will data from these nests be useful?
+
+```{r}
+ggplot(obp,aes(x=order,y=wgtdif,colour=factor(year)))+
+  geom_point() +
+  geom_line(aes(group = eventid)) +
+  facet_wrap(~eventid)
+```
+
+### A statistical model for assessing how hatch order affects body condition 
+
+We refer to the nest (eventid) as a *blocking factor*. The effect of eventid on wgtdiff is called a *random effect*. 
+
+We introduce a new function lmer() in the package lmerTest. We need this function to fit a model that allows us to add eventid as a random effect. 
+
+```{r model_obp}
+model.obp<-lmer(wgtdif ~ order + year + (1|eventid), data = obp)
+summary(model.obp)
+```
+The summary output includes "Random effects" and "Fixed effects". "Fixed effects" tells us about the effect of order and year on body condition. The intercept term is large and negative because year is a numerical variable around 2000. Centering the year variable will yield a more interpretable intercept term. Order_middle and order_last terms are contrasts from order = first. As expected, body condition depends upon hatch order. The year term estimates that body condition increases by approximately 1g per year.
+
+"Random effects" estimates the variation attributed to blocking factors (between-nest variability) and residual variation. This variance structure is important for inferring treatment effects. For this experiment, order effects are measured within nests, so the residual variation is the relevant "noise" term. The year effect is measured between nests, so between-nest variation is the relevant "noise" term for inference around year. 
+
+Let's look at the residual plots for this model:
+```{r}
+resid_panel(model.obp)
+```
+ 
+We would like to plot a summary of the model. We can either extract mean (SE) body condition for each order and year, or we can average the order effects across years to get *marginal order effects*. In this situation, we focus on order effects, so we opt for the marginal means. How would we change the code to get means for each year?
+```{r}
+results1 <- emmeans(model.obp, ~order) %>%
+             as_tibble()
+
+results1
+```
+ 
+We plot the model summary using points and error bars:
+```{r}
+ggplot(results1, aes(order, y = emmean, col = order))+
+  geom_point()+
+  geom_errorbar(aes(ymin = emmean-SE, ymax=emmean+SE), width = 0.2)+
+  ylab("Mean body condition by hatching order")+ xlab("")+
+  theme_bw()
+```
+
+
+## Re-visiting the legume experiment
+
+Let's return to the legume experiment from Lecture 6. Recall that there were 6 trays with 24 plants in each tray. The researchers arranged the treatments so that there were 4 plants with each of the 6 nitrate treatments in each tray.
+
+Although tray is not a factor of interest, it has a large impact on our response variable, so it should be included in the statistical model. Nitrate treatments will be compared within trays, so whether tray is included as a fixed factor or as a random factor, our inference about the effect of nitrate treatments will not change. Let's check this:
+
+### Import data
+
+```{r legumes}
+legume <-read_csv("../Data/legume nitrate experiment.csv")
+glimpse(legume)
+```
+
+We visualise our data before fitting a model. What patterns do you notice?
+
+```{r ggplot1}
+ggplot(legume, aes( x=log10(nitrate), y=RMR, col=factor(tray)))+
+  geom_point(position=position_dodge(width = 0.5))+
+  scale_y_log10()
+```
+
+### Modelling legume data with tray as a fixed or random effect
+ 
+When tray is treated as a fixed factor, we use the function lm(). When tray is treated as a random factor, we use the function lmer().
+
+```{r model_legume1}
+
+model.legume.fixed<-lm(log(RMR) ~ log10(nitrate) + factor(tray), data = legume)
+anova(model.legume.fixed)
+```
+
+
+```{r model_legume2}
+model.legume.random<-lmer(log(RMR) ~ log10(nitrate) + (1|tray), data = legume)
+anova(model.legume.random)
+
+```
+
+The summary() functions give different output. Under the fixed effects model, the contrasts between trays is given explicitly Under the mixed effects (lmer) model, tray is a variance component.  The variation in the response is partitioned into variation *between-trays* (Intercept) and *within trays* (Residual). The between-tray variation is much larger than the within-tray variation.  
+
+### Model summaries (with parameter estimates)
+
+Notice that the parameter estimates corresponding to the nitrate effect are the same for the two models. The intercept terms are different though: in model.legume.fixed, the intercept term is the intercept for tray1. In the mixed effects model, the intercept is an average across trays. 
+
+```{r}
+summary(model.legume.fixed)
+```
+
+```{r}
+summary(model.legume.random)
+```
+
+In the random effects model, we may want to understand which trays had the highest and lowest values of root:mass ratio. We can see this using the function ranef(). The random effects will average to 0. Compare the random effects with the fixed effects contrasts in the summary() of the fixed effects model.
+```{r}
+ranef(model.legume.random)
+```
+
+### Checking model assumptions
+
+Let's compare the residual plots between the two models. They should look the same, because both residuals correspond to the observed response after removing the effects of nitrate concentration and tray. 
+
+```{r check_model2}
+resid_panel(model.legume.fixed)
+```
+
+```{r check_model}
+resid_panel(model.legume.random)
+```
+
+
+### Comparing emmeans() for marginal means and their standard errors
+The standard errors for the mean estimates differ between the fixed effects and the mixed effects models. The reason is evident: In the lmer() model, tray is part of the variation term. The standard error reflects the uncertainty of the mean for a random tray. In the lm() model, we have conditioned upon this particular set of trays. The standard error of the mean reflects the uncertainty of the mean, conditional on the trays that were used. 
+
+So both standard errors are "correct"; which one to use depends upon the context of the problem.
+```{r}
+emmeans(model.legume.fixed, ~ log10(nitrate), at = list(nitrate = c(0.01, 0.1, 1, 2, 10, 100)), type = "response")
+```
+
+
+```{r}
+emmeans(model.legume.random, ~ log10(nitrate), at = list(nitrate = c(0.01, 0.1, 1, 2, 10, 100)), type = "response")
+```
+
+
+
+
+
+
+
+
+
+
+

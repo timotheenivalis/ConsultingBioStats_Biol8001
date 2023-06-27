@@ -1,0 +1,101 @@
+---
+title: "Lecture 9 Models with multiple factors Part II"
+author: "T. Neeman"
+date: "26th August 2021"
+output: pdf_document
+---
+
+
+## Review from Lecture 1
+Let's go back to talk about a couple of the examples from the first lecture.
+Experimental set-up: Are temperature mechanisms modified in a genetically-engineered tomato plant?
+
+* Genotypes: WT or mutant
+* watering conditions: normal or drought
+* Outcome: leaf temperature at 7 days post-treatment
+
+If the genetically-engineered plants are drought-resistant, we would expect that leaf temperatures would less affected by drought in the mutant plants. Let's  import the data and explore these relationships.
+
+```{r libraries, message=FALSE}
+library(tidyverse)
+library(ggforce)
+library(lmerTest)
+library(ggResidpanel)
+library(emmeans)
+```
+
+Import Data set: drought data.csv
+```{r import_data}
+ drought <- read_csv("../Data/drought data.csv")
+glimpse(drought)
+```
+
+Notice that there are 32 measurements, but there are multiple measurements per plant. We can get more detail about the data structure using group_by() %>% summarise(). There were a total of 8 plants: 4 WT and 4 mutant. Two plants of each genotype received normal watering conditions, and two plants of each genotype were exposed to drought conditions. 
+
+```{r data}
+drought %>%
+  group_by(WaterCondition,Genotype, plant) %>%
+  summarise(count = n())
+```
+
+## Data exploration
+
+When we explore the data, it's good also include the information about the data structure (plant). 
+
+```{r explore}
+ggplot(drought, aes(x=WaterCondition, y= Temperature, col=factor(plant)))+
+  geom_jitter(width=0.1)+
+  facet_wrap(~Genotype)
+```
+
+There is evidence that the mutant plants are more drought-resistant, but the strength of the evidence is limited by the small number of plants. Recall from an earlier lecture the schematic diagram of this model:
+
+```{r echo=FALSE, fig.align = 'center', fig.height=3}
+dat2 = data.frame(x0=c(.55,.3), y0=c(.25,.25), r=.07) 
+ggplot() + scale_x_continuous(limits = c(0,1)) +
+  scale_y_continuous(limits = c(0,1))+
+  geom_circle(aes(x0=x0, y0=y0,r=r),data=dat2)+
+  geom_circle(aes(x0=.3, y0=.5,r=0.05),linetype=2)+
+  geom_rect(aes(xmin=.25,ymin=.75,xmax=.35,ymax=.85), fill=NA, colour="black") +
+  geom_rect(aes(xmin=0.0,ymin=.45,xmax=.15,ymax=.55), fill=NA, colour="black") +
+  annotate("rect", xmin = .2, xmax = .4, ymin = .15, ymax = .35,
+           alpha = .2, fill="blue", colour= "black")+
+  geom_segment(aes(x=.3, y=.45, xend=.3, yend=.35), 
+               arrow=arrow(), size=1, color="blue")+
+  geom_segment(aes(x=.3, y=.75, xend=.3, yend=.55), 
+               arrow=arrow(), size=1, color="blue")+
+  geom_segment(aes(x=.15, y=.5, xend=.25, yend=.5), 
+               arrow=arrow(), size=1, color="blue")+
+  geom_segment(aes(x=.48, y=.25, xend=.4, yend=.25), 
+               arrow=arrow(), size=1, color="blue")+
+  geom_segment(aes(x=.1, y=.55, xend=.25, yend=.8), 
+               linetype=2, size=1, color="blue")+
+  annotate("text", x=.07, y=.5, label="Genotype", parse = TRUE,size=5)+
+  annotate("text", x=.55, y=.25, label="sigma", parse = TRUE,size=5)+
+  annotate("text", x=.3, y=.25, label="Leaf_Temp[{i}]",parse=TRUE, size=4)+
+  annotate("text", x=.3, y=.5, label="mu", parse =TRUE, size=5)+
+  annotate("text", x=.3, y=.8, label="Treat", size=5)+
+  annotate("text", x=.1, y=.68, label="'signal'", size=5)+
+  annotate("text", x=.55, y=.37, label="'noise'", size=5)+
+  theme_void()
+```
+
+
+The dotted line indicates that Genotype may affect the Treatment effect, and also Treatment may affect the Genotype effect. Where would we add plant(ID) to this diagram? 
+
+How important is it to include plant(ID) in the model? Let's fit a model with/ without plant as a random effect.
+
+```{r}
+#Ignore plant as a factor
+mod1<-lm(Temperature~Genotype*WaterCondition, data=drought)
+anova(mod1)
+resid_panel(mod1)
+```
+
+```{r}
+#Include plant as a factor
+mod2<-lmer(Temperature~Genotype*WaterCondition + (1|plant), data=drought)
+anova(mod2)
+resid_panel(mod2)
+```
+
