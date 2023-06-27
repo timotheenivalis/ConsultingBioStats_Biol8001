@@ -1,0 +1,41 @@
+taxonConceptID,Species,scientificNameAuthorship,rank,kingdom,phylum,class,order,family,genus,commonName,occurrenceCount
+urn:lsid:biodiversity.org.au:afd.taxon:2869ce8a-8212-46c2-8327-dfb7fabb8296,Vulpes vulpes,"Linnaeus, 1758",species,Animalia,Chordata,Mammalia,Carnivora,Canidae,Vulpes,Fox,82457
+urn:lsid:biodiversity.org.au:afd.taxon:692effa3-b719-495f-a86f-ce89e2981652,Oryctolagus cuniculus,"(Linnaeus, 1758)",species,Animalia,Chordata,Mammalia,Lagomorpha,Leporidae,Oryctolagus,Rabbit,54667
+NZOR-6-132827,Canis lupus,NA,species,Animalia,Chordata,Mammalia,Carnivora,Canidae,Canis,NA,11397
+urn:lsid:biodiversity.org.au:afd.taxon:107696b5-063c-4c09-a015-6edfdb6f4d52,Mus musculus,"Linnaeus, 1758",species,Animalia,Chordata,Mammalia,Rodentia,Muridae,Mus,House Mouse,54309
+urn:lsid:biodiversity.org.au:afd.taxon:30ee9d69-b5f3-4f81-8b7c-10074fbdc485,Capra hircus,"Linnaeus, 1758",species,Animalia,Chordata,Mammalia,Artiodactyla,Bovidae,Capra,Goat,32763
+urn:lsid:biodiversity.org.au:afd.taxon:91b571b6-9dd5-48ad-9ab2-74c69397c131,Camelus dromedarius,"Linnaeus, 1758",species,Animalia,Chordata,Mammalia,Artiodactyla,Camelidae,Camelus,Dromedary,5963
+urn:lsid:biodiversity.org.au:afd.taxon:178a17ff-2135-48e8-856b-39f546f02092,Rattus rattus,"(Linnaeus, 1758)",species,Animalia,Chordata,Mammalia,Rodentia,Muridae,Rattus,Black Rat,24594
+urn:lsid:biodiversity.org.au:afd.taxon:948d8ca1-62fc-4d03-a79d-4be2de837264,Sus scrofa,"Linnaeus, 1758",species,Animalia,Chordata,Mammalia,Artiodactyla,Suidae,Sus,Pig,18470
+urn:lsid:biodiversity.org.au:afd.taxon:7de6b16a-f854-4b4b-88cf-81868ce74ad8,Felis catus,"Linnaeus, 1758",species,Animalia,Chordata,Mammalia,Carnivora,Felidae,Felis,Cat,21411
+NZOR-6-50535,Ovis aries,"Linnaeus, 1758",species,Animalia,Chordata,Mammalia,Artiodactyla,Bovidae,Ovis,NA,4133
+urn:lsid:biodiversity.org.au:afd.taxon:f66500fd-c498-4943-8bfe-195a1819ec7f,Bubalus bubalis,"(Linnaeus, 1758)",species,Animalia,Chordata,Mammalia,Artiodactyla,Bovidae,Bubalus,Swamp Buffalo,4449
+urn:lsid:biodiversity.org.au:afd.taxon:e9d6fbbd-1505-4073-990a-dc66c930dad6,Phascolarctos cinereus,"(Goldfuss, 1817)",species,Animalia,Chordata,Mammalia,Diprotodontia,Phascolarctidae,Phascolarctos,Koala,120026
+urn:lsid:biodiversity.org.au:afd.taxon:f0ac3396-77cc-46e5-86ec-744ffce298f9,Halotydeus destructor,"(Tucker, 1925)",species,Animalia,Arthropoda,Arachnida,Trombidiformes,Penthaleidae,Halotydeus,NA,57
+urn:lsid:biodiversity.org.au:afd.taxon:e79179f8-44bf-46eb-b139-a2e66f6045c1,Rhinella marina,"(Linnaeus, 1758)",species,Animalia,Chordata,Amphibia,Anura,Bufonidae,Rhinella,Cane Toad,21045
+urn:lsid:biodiversity.org.au:afd.taxon:5b3fe1c6-1c2c-4e20-819f-2e6d8fa3d332,Solenopsis invicta,"Buren, 1972",species,Animalia,Arthropoda,Insecta,Hymenoptera,Formicidae,Solenopsis,NA,60
+urn:lsid:biodiversity.org.au:afd.taxon:195e9b1a-84e5-44e3-86bc-5e783b2ba250,Pheidole megacephala,"(Fabricius, 1793)",species,Animalia,Arthropoda,Insecta,Hymenoptera,Formicidae,Pheidole,NA,947
+urn:lsid:biodiversity.org.au:afd.taxon:f5c1b2b5-6ef2-4ddb-8ada-0461cf1fda65,Anoplolepis gracilipes,"(Smith, 1857)",species,Animalia,Arthropoda,Insecta,Hymenoptera,Formicidae,Anoplolepis,Long-Legged Ant,197
+https://id.biodiversity.org.au/node/apni/2891201,Cabomba caroliniana,A.Gray,species,Plantae,Charophyta,Equisetopsida,Nymphaeales,Cabombaceae,Cabomba,NA,127
+https://id.biodiversity.org.au/node/apni/2899212,Mimosa pigra,L.,species,Plantae,Charophyta,Equisetopsida,Fabales,Fabaceae,Mimosa,Cat-claw mimosa,22421
+https://id.biodiversity.org.au/node/apni/2892490,Parkinsonia aculeata,L.,species,Plantae,Charophyta,Equisetopsida,Fabales,Fabaceae,Parkinsonia,NA,35861
+https://id.biodiversity.org.au/node/apni/2919468,Parthenium hysterophorus,L.,species,Plantae,Charophyta,Equisetopsida,Asterales,Asteraceae,Parthenium,NA,405
+NZOR-6-131709,Acacia nilotica,NA,species,Plantae,Charophyta,Equisetopsida,Fabales,Fabaceae,Acacia,Babul,17
+https://id.biodiversity.org.au/node/apni/2904150,Cryptostegia grandiflora,R.Br.,species,Plantae,Charophyta,Equisetopsida,Gentianales,Apocynaceae,Cryptostegia,NA,1150
+https://id.biodiversity.org.au/node/apni/2890160,Tamarix aphylla,(L.) H.Karst.,species,Plantae,Charophyta,Equisetopsida,Caryophyllales,Tamaricaceae,Tamarix,NA,3514
+https://id.biodiversity.org.au/node/apni/2890667,Alternanthera philoxeroides,(Mart.) Griseb.,species,Plantae,Charophyta,Equisetopsida,Caryophyllales,Amaranthaceae,Alternanthera,NA,1651
+https://id.biodiversity.org.au/node/apni/2894705,Nassella neesiana,(Trin. & Rupr.) Barkworth,species,Plantae,Charophyta,Equisetopsida,Poales,Poaceae,Nassella,Chilean needle grass,7194
+https://id.biodiversity.org.au/node/apni/8008245,Lantana camara,L.,species,Plantae,Charophyta,Equisetopsida,Lamiales,Verbenaceae,Lantana,NA,21468
+https://id.biodiversity.org.au/node/apni/2900389,Nassella trichotoma,(Nees) Hack. ex Arechav.,species,Plantae,Charophyta,Equisetopsida,Poales,Poaceae,Nassella,Nassella tussock,40032
+https://id.biodiversity.org.au/node/apni/2899470,Sporobolus pyramidalis,P.Beauv.,species,Plantae,Charophyta,Equisetopsida,Poales,Poaceae,Sporobolus,NA,359
+https://id.biodiversity.org.au/node/apni/2891090,Cenchrus ciliaris,L.,species,Plantae,Charophyta,Equisetopsida,Poales,Poaceae,Cenchrus,Buffel grass,18709
+https://id.biodiversity.org.au/node/apni/2915436,Jatropha curcas,L.,species,Plantae,Charophyta,Equisetopsida,Malpighiales,Euphorbiaceae,Jatropha,NA,73
+https://id.biodiversity.org.au/node/apni/2902951,Eichhornia crassipes,(Mart.) Solms,species,Plantae,Charophyta,Equisetopsida,Commelinales,Pontederiaceae,Eichhornia,NA,962
+https://id.biodiversity.org.au/node/apni/2915978,Eupatorium serotinum,Michx.,species,Plantae,Charophyta,Equisetopsida,Asterales,Asteraceae,Eupatorium,NA,7
+https://id.biodiversity.org.au/node/apni/2897651,Cytisus scoparius,(L.) Link,species,Plantae,Charophyta,Equisetopsida,Fabales,Fabaceae,Cytisus,NA,4314
+https://id.biodiversity.org.au/node/apni/2906788,Salvinia molesta,D.S.Mitch.,species,Plantae,Charophyta,Equisetopsida,Salviniales,Salviniaceae,Salvinia,NA,1326
+https://id.biodiversity.org.au/node/apni/2912711,Miconia calvescens,DC.,species,Plantae,Charophyta,Equisetopsida,Myrtales,Melastomataceae,Miconia,NA,62
+https://id.biodiversity.org.au/node/apni/2919996,Bassia scoparia,(L.) A.J.Scott,species,Plantae,Charophyta,Equisetopsida,Caryophyllales,Chenopodiaceae,Bassia,NA,149
+https://id.biodiversity.org.au/taxon/apni/51291478,Sporobolus anglicus,(C.E.Hubb.) P.M.Peterson & Saarela,species,Plantae,Charophyta,Equisetopsida,Poales,Poaceae,Sporobolus,NA,295
+https://id.biodiversity.org.au/name/apni/208759,Caulerpa taxifolia,(Vahl) C.Agardh,species,NA,Chlorophyta,Ulvophyceae,Bryopsidales,Caulerpaceae,Caulerpa,NA,863
+https://id.biodiversity.org.au/node/apni/2889451,Echium plantagineum,L.,species,Plantae,Charophyta,Equisetopsida,NA,Boraginaceae,Echium,NA,43381

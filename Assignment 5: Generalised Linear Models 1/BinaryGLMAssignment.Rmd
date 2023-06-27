@@ -1,0 +1,170 @@
+---
+title: "Binary GLM assignment"
+author: "Timothee Bonnet"
+date: "3 September 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE)
+```
+
+```{r, message=FALSE, include=FALSE}
+library(tidyverse)
+library(ggbeeswarm)
+library(emmeans)
+```
+
+
+
+### Breast cancer
+
+We re-use the breast cancer density data set from assignment 4 `Breast cancer density.csv`.
+A clinical research group has collected data on breast cancer, breast density and BMI in adult women. Last time we looked at the relationship between breast density and age and body mass index. We found that breast density decreased with increasing age and BMI. We now want to test whether breast density is correlated with the occurrence of breast cancer (variable `case`).
+
+1. Visualize the relationship between `case` and `density` and add a geom_smooth corresponding to the binary glm of `case` as a function of `density` (**1pt**).
+
+2. Then fit the glm corresponding to the graph and discuss how density is associated with the occurrence of cancer (**1pt**). 
+
+3. Based on this model, what is the predicted probability of cancer associated with a density of 0 and that with a density of 100? Discuss whether this is a big difference (**1pt**).
+
+4. We suspect age and BMI are also risk factors for breast cancer and would like to estimate the effect of density while accounting for them. Add additive effects of `AGE` and `BMI` to the glm and look at the summary (**1pt**). 
+
+5. What does the parameter `(Intercept)` mean? Why is it not interesting? (**1pt**).
+
+6. Compute a model prediction for the effect of density (for values of density between 0 and 100) when `AGE` is 50 and `BMI` is 27. What is the difference in probabilities of breast cancer between a density of 0 and a density of 100? How does the effect of density compare to the effect inferred from the first model? (**1 pt**)
+
+
+```{r, include=FALSE}
+bcd <- read_csv("Data/Breast cancer density.csv")
+bcd$case
+
+ggplot(bcd, aes(x=density, y=case)) + geom_jitter(height = 0.05, width = 1, alpha=0.2) +
+  geom_smooth(method = "glm", args.method=list(family="binomial"))
+
+ggplot(bcd, aes(x=density, y=case)) + geom_beeswarm(groupOnX = FALSE) +
+  geom_smooth(method = "glm", args.method=list(family="binomial"))
+
+summary(case0 <- glm(case ~ density, data=bcd, family = "binomial"))
+
+plogis(coef(case0)[1])
+plogis(coef(case0)[1] + 100*coef(case0)[2])
+
+
+summary(case2 <- glm(case ~ density + AGE + BMI, data=bcd, family = "binomial"))
+
+newdat <- tibble(density=seq(0,100, length.out = 100), AGE=50, BMI=27)
+
+newdat$y <- predict(case2, newdata = newdat, type = "response")
+
+emmeans(object = case2, specs = ~ density + AGE + BMI,
+        at=list(density=c(0,100), AGE=50, BMI=27),
+        type="response")
+
+ggplot(bcd, aes(x=density, y=case)) + geom_jitter(height = 0.1, width = 0) +
+  geom_smooth(method = "glm", method.args=list(family="binomial"))+
+  geom_line(col="red",data=newdat, aes(y=y))
+
+
+predlat <- predict(case2, newdata = newdat, type = "link", se.fit = TRUE)
+newdat$y <- plogis(predlat$fit)
+newdat$CI_lower <- plogis(predlat$fit - 1.96*predlat$se.fit)
+newdat$CI_upper <- plogis(predlat$fit + 1.96*predlat$se.fit)
+
+ggplot(bcd, aes(x=density, y=case)) + geom_jitter(height = 0.1, width = 0) +
+  geom_smooth(method = "glm", method.args=list(family="binomial"))+
+  geom_line(col="red",data=newdat, aes(y=y))+
+  geom_ribbon(data = newdat, aes(x=density, ymin=CI_lower, ymax=CI_upper),
+              inherit.aes = FALSE, alpha=0.1, fill="red")
+
+newdat %>%
+  filter(AGE==50) %>% select(AGE)
+
+
+```
+
+
+```{r}
+Cancer <- bcd
+Crisk_glm <- glm(case ~ density+AGE*BMI, data = Cancer, family = "binomial")
+
+newdat <- tibble(density=seq(0,100, length.out = 100), AGE=50, BMI=27)
+PCrisk <- predict(Crisk_glm, newdata = newdat, se.fit = TRUE, type = "link")
+newdat$y <- plogis(predlat$fit)
+newdat$CI_lower <- plogis(predlat$fit - 1.96*predlat$se.fit)
+newdat$CI_upper <- plogis(predlat$fit + 1.96*predlat$se.fit)
+
+ggplot(Crisk_glm, aes(x = density, y= case))+ 
+  geom_beeswarm(groupOnX = FALSE, alpha = 0.2) + 
+  geom_smooth(method = "glm", method.args=list(family="binomial"))+
+  geom_line(col="red",data=newdat, aes(y=y))+
+  geom_ribbon(data = newdat, aes(x=density, ymin=CI_lower, ymax=CI_upper),
+              inherit.aes = FALSE, alpha=0.1, fill="red")+
+  xlab("Breast Density")+ ylab("Occurence of Breast Cancer")
+```
+
+
+### Vole natural selection on mass
+
+During the course we started analysing the snow vole dataset, and found differences in survival probability between males and females. 
+In addition to sex, we suspect survival probability varies by age (A=adult, J=juvenile).
+
+1. Load the dataset `voles_early.csv` and calculate the average survival for each sex-age class (that is, adult female, adult male, juvenile female, juvenile male). (**1pt + 0.5 bonus point if you can make all for calculations in one line of code**)
+
+```{r}
+survdat_early <- read_csv("Data/voles_early.csv")
+survdat_early %>% group_by(sex, age) %>%   summarise(p_survival = mean(survival)) 
+```
+
+2. Fit a GLM of survival to test whether sex and age interact. What do you conclude? What mean survival does the model predict for each of the four sex-age classes? (**1pt**)
+
+```{r}
+vole_s_sexXage <- glm(survival ~ sex*age, data = survdat_early, family = "binomial")
+summary(vole_s_sexXage)
+anova(vole_s_sexXage, test="Chisq")
+
+#the predicted survival probability of adult females is:
+plogis(coef(vole_s_sexXage)["(Intercept)"])
+
+#For adult males:
+plogis(coef(vole_s_sexXage)["(Intercept)"] + coef(vole_s_sexXage)["sexMale"])
+
+#For juvenile females:
+
+plogis(coef(vole_s_sexXage)["(Intercept)"] + coef(vole_s_sexXage)["ageJ"])
+
+#and for juvenile males:
+
+plogis(coef(vole_s_sexXage)["(Intercept)"] + coef(vole_s_sexXage)["sexMale"]+
+         coef(vole_s_sexXage)["ageJ"]+ coef(vole_s_sexXage)["sexMale:ageJ"])
+
+#Or equivalently:
+
+emmeans(vole_s_sexXage, ~ sex*age, type="response")
+```
+
+3. The real reason behind this study is a test of some hypothesis about the relationship between mass and survival. In our haste to include body mass, we first forget everything we have learned about the effects of sex and age. Fit a GLM of survival as a function of mass only. What do you conclude from this model? Make a graph illustrating the relationship. (**1pt**)
+
+```{r}
+vole_glm <- glm(survival ~ mass, data = survdat_early, family = "binomial")
+summary(vole_glm)
+
+ggplot(survdat_early, aes(x = mass, y=survival)) +
+  geom_beeswarm(groupOnX = FALSE) + 
+  geom_smooth(method = "glm", method.args=list(family="binomial"))
+```
+
+4. Now fit the GLM of survival as a function of mass, and of sex interacting with age. How does the conclusion change compared to the previous model? Can you explain why? (One option is to make a graph that visually shows this apparent paradox.) (**1pt**)
+
+```{r}
+summary(m_vole_interaction <- glm(survival ~ 1 + mass * sex*age,
+                 data=survdat_early, family = "binomial"))
+
+anova(m_vole_interaction, test = "Chisq")
+
+ggplot(survdat_early, aes(x=mass, y= survival, color=interaction(sex,age)))+
+  geom_beeswarm(groupOnX = FALSE) + 
+  geom_smooth(method = "glm", method.args=list(family="binomial"))
+
+```
+

@@ -1,0 +1,89 @@
+---
+title: "BIOL8001 - Consulting in Quantitative Biology - Sem 2 2022"
+author: "Timothee Bonnet"
+date: "2023-02-16"
+output: html_document
+---
+
+
+Analysing data, and effectively communicating the methodology and results of this analysis, is fundamental to the practice of science. In this course you will develop the skills to explore and extract rigorous statistical insights from biological data -- perhaps data that you have collected yourself in the lab or field, or data supplied by a collaborator or consulting client.
+
+BIOL8001 will be presented in the form of workshops, and students are expect to attend and actively participate.
+
+Per ANU communications for Semester 2, it is expected that students will attend workshops in person whenever possible. That said, we recognise that these are challenging and uncertain times, and so we are planning a concurrent Zoom option at the link below. Please consider this a lesser option to be used only when circumstances require it: the course is more valuable when you are physically present!
+
+
+# Introduction
+
+The first workshop (Tuesday 26 July) is a gentle introduction to the course and its delivery. You'll have a chance to meet the instructors and the instructors are keen for the chance to get to know you. The agenda is to:
+
+* Meet the instructors
+* Learn about the rationale and objectives of the course
+* Familiarise yourself with the learning environment
+* Discuss the mechanics of class, including expectations and assessment
+* Introduce yourselves (sorry, but we all need to get used to participating!)
+
+# R Bootcamp
+
+Throughout the course we will use the R language for statistical computing. R is most easily used through the RStudio interface. In the first few weeks of the course we will have an R "boot camp", during which we will cover foundational R skills in data input, wrangling (i.e., filtering and restructuring) and visualisation.
+
+We will primarily use the modern data manipulation tools provided in the 'tidyverse' package(s), and use the 'ggplot2' package for visualisation.
+
+There are many useful resources for using R on the web. A particularly useful free online textbook is R for Data Science : https://r4ds.had.co.nz/
+
+Other useful resources appear in the relevant pages below.
+
+## R and Rstudio basics
+
+### Getting R and R studio
+
+You should install R and Rstudio on your computer (they are free). To install them you should:
+
+* First, download R from the Comprehensive R Archive Network (CRAN) https://cran.r-project.org/ . Choose mac, windows or linux as appropriate. It is probably best to use the precompiled binaries.
+* Install R from the file you downloaded.
+* Go to https://rstudio.com/products/rstudio/download/ and download the free desktop version of Rstudio.
+* Install it.
+* When you want to use R, open the Rstudio application.
+
+
+If you are unable to install R and Rstudio on your own computer, or are unable to complete the below tasks, please contact us for help.
+
+## R and Rstudio basics
+
+If you haven't used R or Rstudio before, please watch the two videos 'R and Rstudio basics' and 'Projects and reading data' below. Please work through the material along with the video. If you are unable to make this work on your computer, please contact us for help.
+
+R and Rstudio basics
+
+Projects and reading data
+Cancer data (used in the second video)
+
+Sections 1.4 and 1.5 of R for Data Science may be useful (https://r4ds.had.co.nz/introduction.html#prerequisites).
+
+## R markdown
+
+R markdown is a convenient way to prepare documents that include both normal text/formatting, and R outputs. Assignment 1 included a template in this format. For further assignments, you will create your own R markdown documents.
+
+Here is a small introduction to R markdown.
+A brief introductory video
+
+
+Additional resources:
+
+Chapter 2 of "The Definitive Guide to R Markdown" (https://bookdown.org/yihui/rmarkdown/basics.html) provides a lot of information on things you may wish to do. 
+
+## Other R resources
+
+The ggplot2 book (https://ggplot2-book.org/) gives a great deal of information on things you can do with ggplot.
+
+Many cheat sheets for various things you may want to do using R can be found here: https://github.com/rstudio/cheatsheets
+
+If you would like to practice your ggplot/data manipulation skills on different datasets, or see some great examples different people have made, there is a weekly challenge called Tidy Tuesday you can explore:
+
+https://github.com/rfordatascience/tidytuesday/blob/master/README.md
+
+Many people post their examples on twitter using the #TidyTuesday hashtag. 
+
+
+This is a basic software carpentry workshop on R (without the tidyverse).
+
+http://swcarpentry.github.io/r-novice-gapminder/

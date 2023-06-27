@@ -1,0 +1,33 @@
+Data from: Steroid hormones in hair reveal sexual maturity and competition in wild house mice (Mus musculus domesticus)
+Carlitz, Esther, TU Dresden, https://orcid.org/0000-0002-2618-5862
+Runge, Jan-Niklas, University of Zurich
+König, Barbara, University of Zurich
+Winkler, Lennart, TU Dresden
+Kirschbaum, Clemens, TU Dresden
+Gao, Wei, TU Dresden
+Lindholm, Anna, University of Zurich
+esther.carlitz@tu-dresden.de
+Publication date: December 6, 2019
+Publisher: Dryad
+https://doi.org/10.5061/dryad.x95x69pd6
+Citation
+
+Carlitz, Esther et al. (2019), Data from: Steroid hormones in hair reveal sexual maturity and competition in wild house mice (Mus musculus domesticus), Dryad, Dataset, https://doi.org/10.5061/dryad.x95x69pd6
+Abstract
+
+This dataset belongs to the following article:
+
+Carlitz, E.H.D., Runge, J.-N., König, B., Winkler, L., Kirschbaum, C., Gao, W., Lindholm, A.K., 2019. Steroid hormones in hair reveal sexual maturity and competition in wild house mice ( Mus musculus domesticus ). Sci Rep 9, 1–10. https://doi.org/10.1038/s41598-019-53362-4
+
+Abstract:
+
+Endocrine data from wild populations provide important insight into social systems. However, obtaining samples for traditional methods involves capture and restraint of animals, and/or pain, which can influence the animal’s stress level, and thereby undesirable release of hormones. Here, we measured corticosterone, testosterone and progesterone in the hair of 482 wild-derived house mice that experienced sexual competition while living under semi-natural conditions. We tested whether sex, age, weight and indicators of sexual maturity, reproduction and social conflicts predict hormone concentrations measured in hair (sampling at endpoint). We show that body weight, sex and age significantly predict cumulative testosterone and progesterone levels, allowing the differentiation between subadults and adults in both sexes. Corticosterone was only slightly elevated in older males compared to older females and increased with the level of visible injuries or scars. Testosterone in males positively correlated with body weight, age, testes size, and sperm number. Progesterone in females significantly increased with age, body weight, and the number of embryos implanted throughout life, but not with the number of litters when controlled for age and weight. Our results highlight the biological validity of hair steroid measurements and provide important insight into reproductive competition in wild house mice.
+
+Please find a more precise description in the methods section of this article.
+Methods
+
+Diverse measurements from euthanized mice.
+Usage notes
+
+There are missing values (NA).
+

@@ -1,0 +1,16 @@
+Data from: Prenatal alcohol exposure increases postnatal acceptability of nicotine odor and taste in adolescent rats
+Mantella, Nicole M., State University of New York
+Youngentob, Steven L., State University of New York
+Publication date: June 16, 2015
+Publisher: Dryad
+https://doi.org/10.5061/dryad.32875
+Citation
+
+Mantella, Nicole M.; Youngentob, Steven L. (2015), Data from: Prenatal alcohol exposure increases postnatal acceptability of nicotine odor and taste in adolescent rats, Dryad, Dataset, https://doi.org/10.5061/dryad.32875
+Abstract
+Human studies indicate that alcohol exposure during gestation not only increases the chance for later alcohol abuse, but also nicotine dependence. The flavor attributes of both alcohol and nicotine can be important determinants of their initial acceptance and they both share the component chemosensory qualities of an aversive odor, bitter taste and oral irritation. There is a growing body of evidence demonstrating epigenetic chemosensory mechanisms through which fetal alcohol exposure increases adolescent alcohol acceptance, in part, by decreasing the aversion to alcohol's bitter and oral irritation qualities, as well as its odor. Given that alcohol and nicotine have noteworthy chemosensory qualities in common, we investigated whether fetal exposure to alcohol increased the acceptability of nicotine's odor and taste in adolescent rats. Study rats were alcohol-exposed during fetal development via the dams' liquid diet. Control animals received ad lib access to an iso-caloric, iso-nutritive diet throughout gestation. Odorant-induced innate behavioral responses to nicotine odor (Experiment 1) or orosensory-mediated responses to nicotine solutions (Experiment 2) were obtained, using whole-body plethysmography and brief access lick tests, respectively. Compared to controls, rats exposed to fetal alcohol showed an enhanced nicotine odor response that was paralleled by increased oral acceptability of nicotine. Given the common aversive component qualities imbued in the flavor profiles of both drugs, our findings demonstrate that like postnatal alcohol avidity, fetal alcohol exposure also influences nicotine acceptance, at a minimum, by decreasing the aversion of both its smell and taste. Moreover, they highlight potential chemosensory-based mechanism(s) by which fetal alcohol exposure increases the later initial risk for nicotine use, thereby contributing to the co-morbid expression with enhanced alcohol avidity. Where common chemosensory mechanisms are at play, our results suggest broader implications related to the consequence of fetal exposure with one substance of abuse and initial acceptability of others.
+Usage notes
+Brief Access Lick Data
+This files provides brief-access lick data for sucrose and nicotine solution as a function of maternal alcohol exposure, weight of the animal at the time of testing and sex of the animal. The different sheets provide the mean lick data for each concentration as well as the mean latency to first lick at each concentration of tasting.
+Sniffing Behavior Data
+The data represent the deconstruction of the sniffing patterns of adolescent rats into 14 response variables in response to nicotine odor at different concentrations of odorant. The animals in the study received either prenatal alcohol or control exposure.

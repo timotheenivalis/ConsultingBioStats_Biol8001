@@ -1,0 +1,30 @@
+---
+title: "Major Project"
+author: "Timothee Bonnet"
+date: "2023-02-24"
+output: html_document
+---
+
+Please submit your major project written report here due Friday 4th November.
+
+Your report should include:
+
+1. an introduction with some context around the problem;
+2. an exploratory data analysis and description of what data are included (plus description and justification of any transformations / data cleaning / etc.);
+3. one or more appropriately chosen statistical models (with the choice of model justified, and results presented appropriately / including graphics);
+4. a discussion explaining what your results mean, linking back to the initial context, noting any similarities or differences with the findings of the original paper, and commenting on challenges you faced, possible improvements to experimental design, ideas for future work, etc.. 
+
+ Please produce the report in Rmarkdown, and show all R code necessary to produce outputs (but not necessarily all the code you used while exploring / that did not make the final analysis). Please suppress unnecessary messages/warnings.
+
+ 
+
+Marks breakdown:
+
+* 5 points – initial data exploration & analysis plans document (see the other submission entry).
+* 5 points – presentation during class on 28 October.
+* 20 points – report:
+  * 2 points – clear/relevant introduction.
+  * 5 points – data organisation and exploratory data analysis.
+  * 5 points – executing an appropriate statistical analysis, justifying modelling choices & assumptions.
+  * 5 points – presentation and discussion of results.
+  * 3 points – well formatted Rmarkdown document, clear/efficient R code.

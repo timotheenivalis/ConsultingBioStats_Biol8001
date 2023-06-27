@@ -1,0 +1,225 @@
+---
+title: "Binary GLM assignment"
+author: "Timothee Bonnet"
+date: "11/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Packages:
+```{r, message=FALSE, include=FALSE}
+library(tidyverse)
+library(ggbeeswarm)
+library(emmeans)
+```
+
+
+### Breast cancer
+
+We re-use the breast cancer density data set we have used already in the course `Breast cancer density.csv`.
+A clinical research group has collected data on breast cancer, breast density and BMI in adult women. Last time we looked at the relationship between breast density and age and body mass index. We found that breast density decreased with increasing age and BMI. We now want to test whether breast density is correlated with the occurrence of breast cancer (variable `case`).
+
+1. Visualize the relationship between `case` and `density` and add a geom_smooth corresponding to the binary glm of `case` as a function of `density` (**1pt**).
+
+```{r}
+bcd <- read_csv("Data/Breast cancer density.csv")
+summary(bcd)
+
+ggplot(bcd, aes(x=density, y=case)) + geom_jitter(height = 0.05, width = 1, alpha=0.2) +
+  geom_smooth(method = "glm", method.args=list(family="binomial"))
+```
+
+2. Then fit the glm corresponding to the graph and discuss how density is associated with the occurrence of cancer (**1pt**). 
+
+```{r}
+summary(case0 <- glm(case ~ density, data=bcd, family = "binomial"))
+```
+
+Higher values of density are associated with higher probabilities of case. In term of statistical significance, there is moderate evidence for the effect.
+
+3. Based on this model, what is the predicted probability of cancer associated with a density of 0 and that with a density of 100? Discuss whether this is a big difference (**1pt**).
+
+```{r}
+emmeans(case0, specs = ~density, at=list(density=c(0,100)), type="response")
+```
+
+The predicted probability of cancer goes from 0.0835 to 0.1635. The numbers and the difference between them may look small, but keep in mind what they mean when interpreting. It is a big difference in two ways:
+
+1. In relative terms. The difference represents a doubling of the risk of cancer. 
+2. In absolute terms. Out of 100 women with density 100, we expect 8 more to develop cancer compared to 100 women with density 0. This is a serious public health concern.
+
+
+4. We suspect age and BMI are also risk factors for breast cancer and would like to estimate the effect of density while accounting for them. Add additive effects of `AGE` and `BMI` to the glm and print the summary (**0.5pt**). What does the parameter `(Intercept)` mean here? Why is it not interesting biologically speaking? (**0.5pt**).
+
+```{r}
+summary(case2 <- glm(case ~ density + AGE + BMI, data=bcd, family = "binomial"))
+```
+
+The intercept is the logit-probability of case predicted for a density of 0, an age of 0 and a BMI of 0. Biologically, this number is irrelevant, because we cannot observe breast cancer in women of age 0 and BMI 0, and arguably no one has ever a BMI of 0.
+
+5. Compute a model prediction for the effect of density (for values of density between 0 and 100) when `AGE` is 50 and `BMI` is 27. What is the difference in probabilities of breast cancer between a density of 0 and a density of 100? How does the effect of density compare to the effect inferred from the first model? (**1 pt**)
+
+```{r}
+predictions <- as_tibble(emmeans(case2, ~ density+AGE+BMI, at=list(AGE=50, BMI=27, density=c(0,100)), type="response"))
+
+predictions %>% filter(density %in% c(0,100))
+```
+
+According to this model the probability of cancer goes from 0.0637 to 0.204 as density goes from 0 to 100. This is almost of 3-fold change while the previous model predicted a 2-fold change. 
+Accounting for age and BMI helps estimating the effect of density because density is correlated with age and BMI and age and BMI both have an effect on case.
+
+For **1 bonus point** add the 95% confidence interval to that new prediction line. 
+
+Below, in blue the original model with density as the only predictor, and in red the model controlling for AGE and BMI:
+```{r}
+
+ggplot(bcd, aes(x=density, y=case)) + geom_jitter(height = 0.05, width = 1, alpha=0.2) +
+  geom_smooth(method = "glm", method.args=list(family="binomial"), fill="blue", alpha=0.1) + 
+  geom_line(predictions, mapping = aes(y=prob), col="red") + 
+  geom_ribbon(predictions, inherit.aes = FALSE,
+              mapping = aes(x=density, ymin=asymp.LCL, ymax=asymp.UCL),
+              fill="red", alpha=0.1)
+
+```
+
+
+### Vole natural selection confirmatory study
+
+During the course we used data collected from 2006 to 2010 to run a series of models to estimate the effect of body mass on survival in order to measure overall viability selection. We ended up with a model with an additive effect of `mass`, effects of `sex`, `age` and the interaction `sex:age` and found a positive effect of mass on survival (slope = 0.041, p-value=0.017). We are a bit suspicious of that result because initial models (not accounting for sex and age) were suggesting a negative effect of mass on survival. 
+We would like to confirm the effect of mass on survival and collected supplementary data in the years 2011 to 2014.
+
+### 1. Load the data `voles_late.csv`, visualize the relationship between survival and mass while accounting for age and sex. Then fit the model predicting survival from `mass + age*sex` (**1pt**). 
+
+Loading and inspecting data:
+```{r}
+vole_late <- read_csv("../../Data/voles_late.csv")
+summary(vole_late)
+```
+
+Graph:
+```{r}
+ggplot(vole_late, aes(x=mass, y=survival, col=interaction(sex, age))) +
+  geom_beeswarm(groupOnX = FALSE) +
+  geom_smooth(method = "glm", method.args=list(family="binomial"))
+```
+
+**Note:** that graph actually correspond to the model `glm(survival ~ 1 + mass*sex*age, data=vole_late, family = "binomial"))` but we prefer to fit the model without interactions involving mass in order to estimate the average effect of mass across sex-age classes.
+
+Model:
+```{r}
+summary(late_m0 <- glm(survival ~ 1 + mass + sex*age,
+                       data=vole_late, family = "binomial"))
+```
+
+
+### 2. Based on this model, how does the effect of `mass` estimated for the years 2011-2014 compare to the effect of `mass` estimated for the years 2006-2010? What could explain the difference? (**0.5pt**, **+0.5 bonus point** if you can demonstrate one such possibility)
+
+#### Parameter estimates and p-value
+
+```{r}
+vole_early <- read_csv("../../Data/voles_early.csv")
+
+summary(early_m0 <- glm(survival ~ 1 + mass + sex*age,
+                       data=vole_early, family = "binomial"))
+
+
+summary(late_m0 <- glm(survival ~ 1 + mass + sex*age,
+                       data=vole_late, family = "binomial"))
+
+
+```
+
+The parameter estimate for the effect of mass in early data was `r coef(early_m0)[2]` but `r coef(late_m0)[2]` in the late data. So the parameter estimate is smaller in late data, and the effect is not significant anymore (p=`r summary(late_m0)$coefficients[2,4]`)
+
+
+**Note about ANOVA**: 
+Some people got a bit mislead by looking at the anova of the models. A typical ANOVA is a *sequential* method, that is, it estimates the effect of a predictor, remove that variation, and look at the effect of the next predictor on what is left. That means that the order in which you input predictors in the model formula will change the ANOVA result whenever predictors are correlated:
+
+```{r}
+vole_late_glm <- glm(survival ~ 1 + mass + sex*age,
+                       data=vole_late, family = "binomial")
+anova(vole_late_glm, test = "Chisq")
+
+vole_late_glm2 <- glm(survival ~ 1  + sex*age+ mass,
+                       data=vole_late, family = "binomial")
+anova(vole_late_glm2, test = "Chisq")
+```
+
+That is a tricky feature of ANOVAs we have not covered in class. A solution (if you want to separate the effect of each predictor at the same time) is to use so-called "type-III ANOVA", which is for instance available in the package car:
+
+```{r}
+library(car)
+Anova(vole_late_glm2, type="III")
+Anova(vole_late_glm, type="III")
+```
+
+There, the p-value for mass is insensitive to the position of mass in the model and non-significant. 
+
+#### Now, how to explain the difference of result between the two periods?
+
+We need to distinguish between difference in statistical significance and difference in parameter estimate. The early model said there was a positive effect of mass, the late model said we could not be sure about the presence of an effect of mass and its sign. Does that mean that effect of mass has changed? Not necessarily! 
+
+We collected more data and fitted the second model in an attempt to confirm the result of the first model. Such a confirmation is useful, because when we analysed the first dataset we tried multiple models before deciding we liked the formula `mass + age*sex`. Each model we fitted could have produced an interesting result we liked just by chance, and by trying many models we have increased the risk of finding such _false positive_ results. The second model did not confirm the result that mass has a positive effect on survival, but the second model did not reject such an effect either. At the moment, all we can say is that we do not have clear evidence that mass has an effect on survival in general.
+
+
+If we want to know whether the effect of mass has changed we need to test that idea. So let's combine the two datasets and tests whether there is evidence the effect of mass changed between the early and late years. For that we need to fit an interaction period-mass. We also fit interactions period-sex-age to accomodate other possible changes.
+
+```{r}
+vole_early$early <- TRUE
+vole_late$early <- FALSE
+vole_total <- rbind(vole_early, vole_late[,-1])
+
+summary(all_glm <- glm(survival ~ mass*early + age*sex*early, data = vole_total, family = "binomial"))
+car::Anova(all_glm, type="III")
+```
+
+Whether you look at the summary or at the type-III ANOVA, there is no clear evidence that the effect of mass changed between the two periods. 
+A good explanation for our results is therefore sampling randomness. It is possible that the real effect of mass did not change, but our estimate and measures of uncertainty changed because we caught a limited number of individuals, each with different charactiristics influencing their masses and survival. Incidently, the sample size of the second data set is smaller, so, everything else being equal, we expected less statistical power to detect an effect of mass if the effect is real.
+
+
+### 3. For a mass of 30g, what is the predicted survival probability for each of the 4 age and sex classes? Use predictions from the model fitted on the years 2011-2014. (**1pt**)
+*hint: you probably want to use `emmeans(..., at=..., ...)` or `predict(..., newdata=..., ...)`.*
+
+By "hand":
+```{r}
+dm <- tibble(intercept=1, mass=30, sexMale=c(0,0,1,1), ageJ=c(0,1,0,1), sexMale_ageJ=sexMale*ageJ)
+plogis(as.matrix(dm) %*% as.matrix(vole_late_glm$coefficients))
+```
+
+If you want confidence intervals, standard errors or know what happens inside emmeans() or predict():
+```{r}
+newdata2 <- expand_grid(survival=0, mass=30, sex=c("Female", "Male"), age = c("A", "J"))
+
+mm <- model.matrix(terms(vole_late_glm), newdata2)
+logitmean <- as.vector(mm %*% vole_late_glm$coefficients)
+newdata2$mean <- plogis(logitmean)
+pvar1 <- diag(mm %*% tcrossprod(vcov(vole_late_glm),mm))
+newdata2 <- tibble(newdata2, 
+    lowCI = plogis(logitmean-1.96*sqrt(pvar1)),
+    uppCI = plogis(logitmean+1.96*sqrt(pvar1)))
+
+newdata2 %>% mutate(SE=(uppCI - lowCI)/(2*1.96))
+```
+
+
+With emmeans:
+```{r}
+emmeans(vole_late_glm,specs=~age*sex,
+        at=list(mass=30),
+        type="response")
+
+```
+
+With predict
+```{r}
+predict(vole_late_glm,newdata=expand_grid(mass=30,
+                             age=c("J","A"),
+                              sex=c("Female","Male")),
+                                 type="response",se.fit=TRUE)
+```
+
+
+

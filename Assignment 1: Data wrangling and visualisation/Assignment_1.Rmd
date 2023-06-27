@@ -1,0 +1,130 @@
+---
+title: "BIOL8001 Assignment 1"
+author: "You"
+date: "29/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#don't change this one
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this assignment, you will explore ways to rank species that are invasive to Australia, using a number of different datasets.
+
+You should follow through the instructions in this document, typing your R code in each of the grey 'chunks'. When you are finished, press the knit button above. Note that this will only work if your code works -- so please check that it does and ask if you have any problems. I am very happy to help you troubleshoot during this assignment.
+
+## Starting off
+
+Please make sure this document is in an R project, and you have created a data folder inside that project. Place all of the data files from wattle inside that folder.
+
+First, we will read and filter data on the costs of managing invasive species, from this paper:
+
+Cuthbert, R. N., Diagne, C., Haubrock, P. J., Turbelin, A. J., & Courchamp, F. (2021). Are the “100 of the world’s worst” invasive species also the costliest?. Biological Invasions, 1-10.
+
+The database is called 'InvaCost_3.0.csv'. You might like to open it in excel to have a look at it before heading to R. It is quite large and complex, but we will only work with a few bits.
+
+When you are ready, in the below R chunk please: (1) load the 'tidyverse' library, and, (2) read in the data in 'InvaCost_3.0.csv'. When you read in the data using read_csv(), please also use the option guess_max = 10000 -- this ensures that the it will read the columns correctly. Please give the dataset a useful name. Then, (3) check its structure. (0.5 points each = 1.5 total)
+
+```{r}
+
+
+
+
+```
+
+In the above publication, they only use a subset of the data. In the methods they state:
+
+*First, we filtered data to include only costs that were of high reliability (column: “Method_reliability”), and thus from peer-reviewed literature and official documents, or reproducible sources. Second, we considered only costs that were empirically observed (column: “Implementation”), rather than those expected based on predictions from smaller scales. Third, we excluded genera for which species-level information was absent or mixed.*
+
+In the following R chunk, use filter() to follow each of the steps they used. Create a new dataset containing the output of your filtering, and check its structure. The resulting dataset should have 5666 rows. (1.5 points)
+
+Suggestion: The first two steps should just involve filtering the data directly. The third step is more difficult. If you look at the `Species` column of the data, you see that there are some records which refer to multiple species (e.g., Sporobolus anglicus/Sporobolus alterniflorus), and some which refer to species groups (e.g., Eucalyptus sp. or Liriomyza spp.). To filter these out, you might use something like str_detect(), e.g., ```filter(!str_detect(Species,pattern='spp\\.'))``` will filter out those species ending with "spp.". The two backslashes are necessary in this case because of a quirk with how text matching works.
+
+```{r}
+
+
+
+
+```
+
+On additional filter step is necessary that was not listed in the methods above: to keep only the rows with usable cost estimates. Filter out those rows for which the `Cost_estimate_per_year_2017_USD_exchange_rate` column is missing. You can use is.na() to check for missing values, and an ! before a statement means "not", i.e,, !is.na() can be read as "is not NA". Again make sure that you save what you get to a dataset. (0.5 points)
+
+```{r}
+
+
+
+```
+
+## Australia
+
+Now, we will focus on Australia. 
+
+Use filter, group_by, summarise, and arrange to create a table of the top invasive species by total cost to Australia (in this dataset), in descending order of total cost, also showing the average cost per year. In each case, operate in terms of the 2017 USD exchange rate.
+
+Make sure the resulting table is stored with the name costs_Aus.
+
+(1 point)
+
+```{r}
+
+
+```
+
+Create a bar plot, with horizontal bars (i.e., using coord_flip) of the raw cost (in 2017 USD) of each species to Australia. Fill the bars by the `Type_of_cost_merged` column. Note that you will have to use stat='identity' in your geom_bar() because you want the cost rather than the number of entries.
+
+(1 point)
+
+```{r}
+
+
+```
+
+## Other rankings
+
+Cost is one way to rank invasive species but not the only way. One approach is expert elicitation. To this end I asked some experts (i.e., the staff of the BDSI, and hopefully also you the BIOL8001 class) how they would rank a selection of invasive species. The results are in the 'expert_rankings.xlsx' file. 
+
+To read an excel file directly (rather than a csv), you need to use a package. The 'readxl' package is a good choice here, and you already will have it installed. You need to load it, then use `read_xlsx()` to read the file. You will also need to specify a sheet to read, since excel files can have multiples. In this case, do this using `sheet = 'Sheet1'`.
+
+Give this new dataset a useful name.
+
+(0.5 points)
+
+```{r}
+
+
+```
+
+Now, we have two separate datasets that share some information that we wish to use together. To combine them, we can use what is called a join. Specifically, in this case, we will use left_join() (which is in the tidyverse). What this does, is it takes two data frames that share some column (in this case, Species) and adds the information from the right data frame to the one on the left, based on that column. The critical thing you have to ensure before you do this is that they both share a column. 
+
+First, check the structure of both the costs_Aus data you created earlier, and the new expert rankings, and ensure they share the species column correctly. Then use left_join() to join them together. Save the resulting output with a useful name, and check its structure -- you should see six columns, including the information from both the datasets you have just joined together.
+
+(1 point)
+
+```{r}
+
+```
+
+My first instinct would be to make a plot to compare the rankings. However, note that there were a lot of species not ranked by the experts -- we need to include these. An appropriate solution might be to give these the value -1. You could do this using mutate, e.g., `mutate(BDSI_votes_2 =if_else(is.na(BDSI_votes),-1,BDSI_votes))`. Do something like this (also for the BIOL8001 votes), and then produce a scatter plot comparing the total cost to the BDSI votes and the BIOL8001 votes (the simplest way to do this is probably to use two different geom_point() calls, each with their own aesthetic indicating which y to use). Use a log scale for the total cost to make it easier to read.
+
+(1 point)
+
+```{r}
+
+
+```
+
+It looks like the rankings are at least somewhat correlated, though clearly there is a lot of noise (perhaps due to the ad-hoc way the experts were consulted). 
+
+## Other data sources
+
+On wattle you have been provided with two addtional files: `ALA_records.csv` gives information on the number of records of each species there are on the Atlas of Living Australia, which you might consider to be a proxy for abundance or distribution, and `Various Australian lists.xlsx` has a few lists of priority species provided by the Australian government, along with a top 10 list found in a published paper (in which the invasive species are ranked based on the number of native species they impact).
+
+Make as many new R chunks as you need below. Read in the data from these two additional files, and join it with the data you already have. Use the combined data to produce an additional two visualisations that tell you something you think is interesting about ranking invasive species to Australia, and briefly comment on what you found.
+
+(2 points)
+
+
+
+
+
