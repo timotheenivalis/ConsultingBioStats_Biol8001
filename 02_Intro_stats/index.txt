@@ -1,0 +1,5 @@
+Pre-reading: "Ten simple rules for getting started with statistics in graduate school"
+                         "Ten simple rules for effective statistical practice"
+
+In this section we will discuss statistical thinking, and begin to think about statistical models. Here are the packages you need to install before Friday 19th August:
+install.packages(c("ggbeeswarm", "ggResidpanel", "emmeans", "GGally"))

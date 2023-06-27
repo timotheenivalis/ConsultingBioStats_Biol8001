@@ -1,0 +1,183 @@
+---
+title: "Statistical Thinking in Biology Research"
+subtitle: "Probability and Statistical Inference"
+author: you
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+
+## Examples of common distributions in biological research
+
+* Binomial distribution
+   * family of distributions
+   * Describes potential outcomes: #successes out of n independent trials
+   * defined by two parameters: 
+      * n = # of independent trials
+      * p = probability of success in a trial
+      
+   * sample space ${0, 1, ..., n}$
+   
+## Probabilities of possible outcomes for 100 flips of a very biased coin
+```{r, message=FALSE, fig.height=1.5, fig.width=2, fig.align = 'center'}
+outcomes_binomial <- tibble(outcomes = seq(71,100, by=1), 
+                            prob = dbinom(outcomes, size=100, prob=0.9))
+ggplot(outcomes_binomial, aes(x=outcomes,y = prob))+
+   geom_bar(stat="identity")
+```   
+
+## Simulating outcomes from a coin-flipping machine
+
+```{r, message=FALSE, fig.height=1.5, fig.width=2, fig.align = 'center'}
+sample_binomial <- tibble(x = rbinom(1e4, size = 100, prob = 0.9))
+ggplot(sample_binomial, aes(x = x))+
+   geom_histogram(binwidth = 0.5)
+```
+
+
+
+
+## Sampling from a distribution: A data-generating machine
+
+```{r normal_machine,fig.height=3, fig.width=4, fig.align = 'center', echo=FALSE, warning=FALSE}
+library(ggforce)
+dat = data.frame(x0=c(.25,.25,.60), y0=c(.25,.55,.25), r=.1)
+ggplot() + scale_x_continuous(limits = c(0,1)) +
+  scale_y_continuous(limits = c(0,1))+
+  geom_circle(aes(x0=x0, y0=y0,r=r),data=dat)+
+  annotate("rect", xmin = .15, xmax = .35, ymin = .15, ymax = .35,
+           alpha = .2, fill="blue", colour= "black")+
+  geom_segment(aes(x=.25, y=.45, xend=.25, yend=.35), 
+               arrow=arrow(), size=1, color="blue")+
+  geom_segment(aes(x=.5, y=.25, xend=.35, yend=.25), 
+               arrow=arrow(), size=1, color="blue")+
+  annotate("text", x=.25, y=.25, label="Y[{i}]", parse = TRUE,size=5)+
+  annotate("text", x=.6, y=.25, label="sigma (SD)",parse = TRUE, size=3)+
+  annotate("text", x=.25, y=.55, label="mu (mean)", parse = TRUE, size=3)+
+  #ggtitle("Graphical model for normal distribution") +
+  theme_void()
+
+```
+
+Now let's generate data that looks more like real biological data. Data generating process = Model
+
+## Model 1: Precipitation -> Yield
+```{r, fig.height=1.4, fig.width=2, fig.align = 'center'}
+library(Pareto)
+set.seed(2021906)
+annual_rain<-rPareto(190,15,alpha=6)
+yield <- 2 + 5*annual_rain - 0.1* annual_rain^2 + rnorm(190,0,4)
+yield_dat<-tibble(annual_rain = annual_rain, yield=yield)
+head(yield_dat)
+```
+
+## Model 1: Precipitation -> Yield
+```{r, fig.height=2, fig.width=3}
+ggplot(yield_dat, aes(annual_rain, yield))+geom_point()+
+   xlab("rain(cm)")+ylab("yield (t/hectare)")
+```
+
+## "Data generating Machine" for Model 1
+
+*
+
+*
+
+*
+
+
+## Model 2: Simulate Mouse Challenge Experiment
+```{r}
+set.seed(220621)
+challenge <- tibble(MouseID = 1:12, 
+            Treat = rep(c("Saline", "Vaccine"), each = 6),
+            Score = rep(c(10,6),each = 6) + rnorm(12,0,sd = 4))
+head(challenge)
+```
+
+## Model 2: Simulate Mouse Challenge Experiment
+
+```{r, fig.height=2, fig.width=3}
+ggplot(challenge, aes(x = Treat, y = Score, col =Treat))+
+   geom_point()
+```
+
+## "Data generating Machine" for Model 2
+
+
+## Model 3: Mouse Challenge Experiment with Variant
+### Challenge with WT virus or variant
+```{r}
+set.seed(362154)
+challenge2 <- tibble(MouseID = 1:24, 
+            Challenge = rep(c("WT", "var1"), each = 12),
+            Treat = rep(rep(c("Saline","Vaccine"),each = 6),2),
+         Score = rep(c(10,6,14,7),each = 6) + rnorm(24,0,sd = 4))
+```
+
+## Model 3: Mouse Challenge Experiment with Variant
+### Challenge with WT virus or variant
+```{r}
+head(challenge2)
+```
+
+## Model 3: Mouse Challenge with Variant
+
+```{r, fig.height=2, fig.width=3}
+ggplot(challenge2, aes(x = Challenge, y = Score, col =Treat))+
+   geom_point(position = position_dodge(width = 0.5))
+```
+
+## "Data generating Machine" for Model 3
+
+
+
+## Model 4: Recreate some thorn density data
+
+```{r, message=FALSE}
+site <- rep(c("Site1", "Site2"), each = 30)
+thorn<- c(seq(3,7,length.out = 30), seq(6, 10, length.out = 30))
+set.seed(65432)
+herbs <- rep(c(20,35), each = 30) - 1.8*thorn+ rnorm(60,0,3)
+herb_data <- tibble(site = site, thorn = thorn, herbs = herbs)
+head(herb_data)
+```
+
+## Model 4: Thorn density data
+```{r, fig.height=2, fig.width=3, message=FALSE}
+ggplot(herb_data, aes(thorn, herbs))+geom_point()+
+   geom_smooth(method = "lm")
+```
+
+## Model 4: Recreate some thorn density data
+
+```{r, fig.height=2, fig.width=3, message=FALSE}
+ggplot(herb_data, aes(thorn, herbs, col = site))+
+   geom_point()+
+   geom_smooth(method = "lm")
+```
+
+
+## "Data generating Machine" for Model 4
+
+*
+*
+*
+*
+*
+*
+
+
+
+## Summary
+
+* A probability distribution: a set of possible outcomes and associated probabilities
+* Data generating process: set of rules for generating set of outcomes = Model
+* Probability: from rules to data
+* Statistics:  from data to model
+
+::: block
+### Statistics: re-constructing the model, given the data 
+### The Ultimate Challenge!
+:::
+

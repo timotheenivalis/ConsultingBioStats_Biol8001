@@ -1,0 +1,244 @@
+---
+title: "Lecture 6: More on Model Parameters"
+author: "T. Neeman"
+date: "19th August 2022"
+output: pdf_document
+---
+
+
+## Model Parameters
+
+```{r libraries, message = FALSE}
+library(tidyverse)
+library(ggbeeswarm)
+library(equatiomatic)
+library(ggResidpanel)
+library(emmeans)
+library(GGally)
+library(flextable)
+```
+
+In the last lecture, we set up a workflow for a data analysis of data of a simple experiment. In this lecture, we'll illustrate how a statistical model is very flexible framework for assessing associations and patterns in our data. 
+
+A model is defined by a set of parameters. The **parameters** are the constants in the equations or expressions that link the experimental factors to the mean response. For example, the (rain, yield) data, the form of the model was yield = a + b\*rain + c\*rain^2. The model parameters are a, b, and c.  The data are used to **estimate** the model parameters. As with all estimates, one also estimates the **uncertainty** (SE) of the model parameter estimates. 
+
+The parameters in the seed orchard model were (1) the **mean** in each group, and (2) the **mean difference**. The variation around the means was also estimated, and is of interest to us, especially if we plan to do another study. For example, in a follow-up study, we'll need to estimate the signal:noise ratio; the larger the noise (variation) relative to the signal, the more samples we'll need to distinguish the groups.
+
+We estimate 3 parameters, but there is some redundancy here, since mean_diff $= \mu_{SO} - \mu_{P}$. On the other hand, the mean difference is the parameter of greatest interest to us, because it estimates the association between treatment and outcome. So whilst this model has two parameters, there is more than one way to define the model parameterisation. 
+
+R parameterises the seed orchard model as follows:
+
+* Parameter 1: mean of the reference group. The reference group is the group with factor level 1; in this case group 'SO'. 
+
+* Parameter 2: mean difference between two groups. 
+
+Notice that the mean of the P group is Parameter 1 + Parameter 2. 
+
+The parameter estimates are obtained via the **summary** function applied to the model object.
+
+```{r summary_seed}
+seed <- read_csv("../Data/seed orchard data.csv") %>%
+        mutate(seedlot = factor(seedlot, levels = c("P","SO")))
+
+model.seed <- lm(dbh ~ seedlot, data = seed)
+
+summary(model.seed)
+```
+
+Compare the parameter estimates with the mean estimates from the **emmeans** function
+
+```{r warning=FALSE}
+emmeans(model.seed, ~seedlot) %>%
+  as_tibble() %>%
+  flextable::flextable() %>%
+  colformat_double(j = c(2:3,5:6), digits = 1)
+
+```
+
+
+## A model for multiple groups
+
+Pea growth data: Peas were grown under 5 different growth media which differed in the type of sugar used (pea data.csv). The different types of sugar (including a no-sugar control) were:  control, glucose, fructose, g&f and sucrose. The experimenter recorded the lengths of pea sections. 
+
+How many parameters in this model? What is the reference group for this experiment? 
+
+* Parameter 1: mean of the reference group ("control"): $\mu_{control}$
+
+* Parameters 2 - 5: mean difference in pea length between each sugar treatment and control: $\beta_1, \beta_2, \beta_3, \beta_4$
+
+
+Notice that $\mu_{fructose} = \mu_{control} + \beta_1(sugar_{fructose})$, 
+$\mu_{glucose} = \mu_{control} + \beta_2(sugar_{glucose})$, etc. 
+
+When there are no differences amongst the varieties, then Parameters 2 - 5 = 0. The ANOVA table for variety has 4 degrees of freedom, and the associated p-value is a measure of evidence against the hypothesis that these 4 parameters are 0 (i.e. no treatment effect).
+
+
+```{r summary_pea}
+pea <- read_csv("../Data/pea data.csv")
+str(pea)
+model.pea <- lm(length ~ sugar, data = pea)
+extract_eq(model.pea)
+summary(model.pea)
+```
+
+
+Compare the model parameter estimates with the mean estimates obtained from the **emmeans** function.
+```{r emmeans_pea}
+emmeans(model.pea, ~sugar)
+```
+
+
+  
+## Models for associations between continuous variables
+
+Breast cancer density data: Cases (Case = 1) were women who developed breast cancer after their first follow-up mammogram and Controls were still breast cancer-free at the time. Age (years) at first mammogram, body mass index at first mammogram. The researcher wants to assess whether breast density was a risk factor in this case-control study. She is also interested in the relationship between breast density and age and body mass index. 
+
+Let's explore the relationship between age, BMI and breast density
+
+```{r, fig.height=1.4, fig.width=2, fig.align = 'center'}
+breast <- read_csv("../Data/breast cancer density.csv") %>%
+  mutate(case = factor(case, labels = c("control","case")))
+summary(breast)
+```
+
+Here are exploratory plots showing the relationship between age, BMI on breast density
+
+```{r, message=FALSE}
+ggpairs(breast,columns = c("AGE", "BMI", "density"), aes(col = factor(case), alpha = 0.1) )
+```
+It looks like cases have on average higher breast density. There is a lot of variation between patients, but there is significant negative correlation between age and density and between bmi and density, in both cases and controls. There is little correlation between bmi and age. 
+
+We can also look at these relationships using geom_smooth(). The code below looks at the association of BMI and breast density. You can repeat this code for age and breast density:
+
+```{r, message = FALSE}
+ggplot(breast, aes(BMI, density, col = case))+
+  geom_point()+
+  geom_smooth() + 
+  facet_wrap(~case)
+```
+Let's fit 3 separate models to these data, interpret and compare the parameter estimates.
+In the equations below, parameter estimates are denoted by a, b, c, d, e, f and g. The lm() will also estimate the variance components (sigmas), but our focus will be on a:g.
+
+Model 1: Density = a + b * AGE + N(0,sigma1)
+Model 2: Density = c + d * BMI + N(0, sigma2)
+Model 3: Density = e + f * AGE + g * BMI + N(0,sigma3)
+
+
+```{r fit_models}
+mod_age <- lm(density~AGE, data = breast)
+mod_BMI <- lm(density~BMI, data = breast)
+mod_AGE_BMI <- lm(density ~ AGE + BMI, data = breast)
+extract_eq(mod_age)
+extract_eq(mod_BMI)
+extract_eq(mod_AGE_BMI)
+```
+
+The summary function gives the parameter estimates. Compare the parameter estimates of the first two models with the third model. What is R-squared? How does it change between models?
+What is the intercept? Is it a meaningful parameter?
+
+```{r}
+summary(mod_age)
+summary(mod_BMI)
+summary(mod_AGE_BMI)
+```
+
+To make the intercept more interpretable, one can centre the covariates, ie subtract off the mean. Then re-fit the model using centred age and centred BMI. Compare the parameter estimates. How would we interpret the intercept parameter?
+
+```{r}
+breast <- breast %>%
+  mutate(AGE_C = scale(AGE, scale = FALSE),
+         BMI_C = scale(BMI, scale = FALSE))
+
+
+mod_AGE_BMI_C <- lm(density ~ AGE_C + BMI_C, 
+                    data = breast)
+summary(mod_AGE_BMI_C)
+```
+
+## Nitrate availability and plant growth
+
+Plants respond to external nitrate availability in the soil by altering their root mass ratio (RMR). Under low nitrogen conditions, plants allocate relatively more biomass to the root. Legumes have the ability to form root nodules in symbiosis with $N_2$-fixing rhizobia, and this may impact on the soil nitrogen - RMR relationship characteristic of other plants. 
+
+In this glasshouse experiment, researchers grew legumes under 6 different soil nitrogen conditions: 0.01, 0.1, 1,2, 10, and 100 mM. Seedlings were grown for 4 weeks, then harvested, dried and RMR measured. 
+
+### Import data
+
+```{r legume_nitrate}
+legume<-read_csv("../Data/legume nitrate experiment.csv")
+str(legume)
+```
+
+### Data exploration
+
+We look at the relationship between treatment (nitrate concentration) and response (RMR). Typically, one plots log(concentration) on the x-axis. We present both RMR and log(RMR) as potential response variables. 
+```{r legume_plot}
+ggplot(legume, aes(x=nitrate, y=RMR))+ 
+  geom_beeswarm()+
+  scale_x_log10()
+
+ggplot(legume, aes(x=nitrate, y= RMR))+ 
+  geom_beeswarm()+
+  scale_x_log10()+
+  scale_y_log10()
+
+ggplot(legume, aes(x=nitrate, y= RMR))+ 
+  geom_beeswarm()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~tray)
+
+```
+
+We consider our model assumptions that the data should be normally distributed around its mean. The RMR distribution is clearly non-normal; it has long tails. On the other hand, the log(RMR) distribution looks more "normal". This is a relatively common phenomenon with biological data, and visualising the data before modelling it will help us choose a reasonable model.
+
+We have a couple of options regarded how we include nitrate in the model. On the one hand, we have 6 treatments, so nitrate can be a *factor* with 6 levels. On the other hand, we anticipate a dose-response relationship, with decreasing RMR for increasing log(nitrate concentration).
+
+*Option 1:* Treat nitrate concentration as a factor with 6 levels. This model has *6 parameters*, namely the mean log(RMR) for each concentration level. One can estimate the mean differences in log(RMR) between any two nitrate concentration levels, but we might miss the real story, which is how does log(RMR) change for every 10-fold inrease in dose. 
+
+*Option 2:* Treat log10(nitrate concentration) as a continuous variable. The simplest model to consider is log(RMR) = a + b * log10(nitrate). This model has 2 parameters: *a* the intercept, and *b* the slope. *b*  measures the association between log10(nitrate) and log(RMR). For every 10-fold increase in concentration, log(RMR) increases by b units. 
+
+We'll go with option 2, given the data and our research question. We include tray in the model because we notice that tray impacts on log_RMR.
+
+### Fit statistical model to data
+```{r model_fit}
+model.legume<-lm(log(RMR) ~ log10(nitrate) + factor(tray), data = legume)
+anova(model.legume)
+summary(model.legume)
+```
+
+The anova() function shows us the ANOVA table for the model. The important line is the first line, which indicates strong evidence that log10(nitrate concentration) is associated with log(RMR). We don't yet know the direction of the association. But the ANOVA table provides the inference that indicates that the "signal" we thought we might be seeing is probably "real". 
+
+The summary() function provides the parameter estimates and SE(uncertainty). The two rows under Coefficients are the estimates for *a (Intercept)* and *b (slope)*. The slope estimate *-0.19* is negative, meaning that as log(concentration) increases, log(RMR) decreases. The standard error *0.027* is a measure of our uncertainty around the estimated slope. The t-value *-7.0*  is the ratio of the estimate to the SE: -0.19 / 0.027. I call this the *signal-to-noise* ratio, as it measures the strength of the slope "signal" relative to our uncertainty of the magnitude of the signal. The further t is from 0, the stronger our evidence that the "signal" is real. 
+
+Finally, the p-value is derived from the t-value, and has an easily recognisable interpretation. 
+
+### Check model assumptions
+
+Following our standard workflow, we assess our model assumptions with residual plots.
+
+```{r check_model}
+resid_panel(model.legume)
+```
+### Summarise model graphically
+
+A summary of the model can be shown together with the data. We need something equivalent to means and standard errors. Instead of the emmeans() function, we'll use the predict() function to get estimated mean log_RMR for a range of nitrate concentrations. The predict() function includes an option for 95% confidence intervals around the estimated means. The confidence interval is mean +- 1.96*SE.
+```{r model_summary}
+results1 <- emmeans(model.legume, ~nitrate+tray, type = "response",
+                   at = list(nitrate = c(0.01, .1, 1, 2, 10,100),
+                             tray = 5)) %>%
+            as_tibble()
+results1
+```
+
+
+```{r}
+ggplot(data=results1, aes(x=nitrate, y=response))+
+  geom_line()+
+  geom_ribbon(data=results1, aes(x=nitrate, ymin=response-SE, ymax=response+SE), alpha = 0.2)+
+  geom_point(data = legume, aes(x=nitrate, y=RMR),col="darkgreen")+
+  scale_x_log10()+
+  scale_y_log10()+
+  theme_classic()
+  
+```
+

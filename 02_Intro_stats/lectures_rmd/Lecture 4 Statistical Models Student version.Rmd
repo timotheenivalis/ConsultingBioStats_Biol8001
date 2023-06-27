@@ -1,0 +1,151 @@
+---
+title: "Statistical Thinking in Biology Research"
+subtitle: "Statistical Models"
+author: you
+institute: Australian National University
+date: "16th August 2022"
+output: html_document
+---
+ 
+## A few key ideas for interpreting experimental data
+
+* In an experiment, we compare responses under different conditions.
+* The measured response is a mixture of "signal" and "noise".
+* Signal: effect of treatments/conditions on response.
+* Noise: measurement error, biological, environmental variation
+* Statistical models turn data into information.
+ 
+ 
+::: block
+### The goal of statistical modelling is to partition data into "signal" and "noise" or variation. 
+:::
+
+ 
+## What is a Statistical Model?
+
+* An informative summary of data 
+* A representation capturing important patterns
+* A description of a data generating process
+* A mathematical model that includes measures of uncertainty
+ 
+One can fit a model to **explain** outcomes.
+
+One can fit a model to **predict** outcomes.
+
+## A Statistical Model of an Experiment
+
+### Explanatory model
+* Statistical model: a conceptualisation of experiment
+   * **a measured response** - outcome variable
+   * **experimental factors** - how do they influence outcome?
+   * nuisance (design) factors - how do they influence outcome?
+   * Other variation (unexplained)
+
+## Statistical Models: a principled way to learn from data
+
+* data = signal + noise = mean response + variation
+* mean response = f(experimental factors)
+* variation = g(nuisance factors) + unexplained variation
+
+::: block
+## Experimental design: a principled way to set up experiments to efficiently separate signal and noise.
+:::
+
+# Understanding statistical models: examples from Lecture 1
+
+## Example 1: Shigella vaccine challenge experiment
+
+* **Outcome:** 7-day average symptom score post-challenge
+* **Experimental factor:** vaccine received (saline/ low dose / high dose)
+* All mice challenged with Shigella bacteria at Day 14
+
+
+This time, 6 mice per cage (two per treatment), and 6 cages total.
+
+* Potential *factors* influencing score: cage (6) and treatment (3)
+* Can estimate *cage effects* (score differences between cages)
+* Can estimate *treatment effects* **within** each cage
+
+
+## Example 1: Shigella vaccine challenge experiment
+### Separating "signal" and "noise": Analysis of Variance
+```{r setup, message=FALSE, echo=FALSE}
+library(tidyverse)
+vaccine<-read_csv("Data/vaccine study.csv")
+```
+
+```{r vaccine_anova, message = FALSE}
+model_vaccine<- lm(Score~Treatment+factor(cageID), data=vaccine)
+anova(model_vaccine)
+```
+
+## Example 2: Drought resistance in GM tomato plants 
+
+* **Outcome:** leaf temperature at 7 days post-treatment
+*  **Experimental factors:** 
+    * Genotype (WT/mutant) 
+    * Water (normal, drought)
+
+
+Research question: Does mutation confer drought-resistance?
+
+Equivalent statistical question: 
+Do treatment effects differ by genotype? i.e. is there a treatment by genotype interaction?
+
+
+## Example 2: Drought resistance in GM tomato plants 
+### Separating "signal" and "noise": Analysis of Variance
+```{r}
+drought<-read_csv("Data/drought data.csv")
+```
+
+
+```{r drought_anova, message=FALSE}
+model_drought<- lm(Temperature~Genotype*WaterCondition, data=drought)
+anova(model_drought)
+```
+
+
+
+## Example 3: Diet and obesity
+### Are NODk mice more susceptible to obesity with a high fat diet?
+
+* **Outcome:** mouse weight (g)
+* **Experimental factors:**
+  * Genotype: WT or NODk
+  * Diet: normal or high fat
+  * Age: measured over time
+
+::: block
+## Does diet impact *growth*? Does diet have stronger impact on growth in NODk mice?
+:::
+
+
+
+## Example 3: Diet and obesity
+```{r}
+library(lmerTest)
+```
+
+```{r}
+drought<-read_csv("Data/diet and diabetic mice.csv")
+```
+
+
+```{r}
+model_mice<-lmer(Wt~Age*Diet*Strain + (1|MouseID), data=mice)
+anova(model_mice)
+```
+
+## Summary
+
+* Statistical models: conceptualisation of experiment
+* Fitting a Statistical model to data: estimates of signal and noise
+* Signal (pattern): treatment effects and interactions
+* Noise: randomly distributed scatter around pattern.
+* Fitting Statistical model: make inferences about treatment effects/interactions
+
+:::block
+### In the next workshop, we'll fit models to data using R
+:::
+

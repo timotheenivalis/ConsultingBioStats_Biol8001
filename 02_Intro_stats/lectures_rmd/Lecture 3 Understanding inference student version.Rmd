@@ -1,0 +1,202 @@
+---
+title: "Statistical Thinking in Biology Research"
+subtitle: "Understanding Statistical Inference through Simulation"
+author: you
+institute: Australian National University
+date:
+output:word_document
+---
+ 
+## Key questions
+
+* How do we decide whether a treatment effect is real?
+* How do we decide if a "pattern" in our data is real or imagined? 
+* Given the experimental data, what can we *infer* about the effect of treatments?
+* What counts as evidence?
+ 
+::: block
+### Let's use simulation to explore these questions.   
+:::
+
+## Let's simulate some data!
+
+* Made-up scenario: testing new blood pressure lowering medication
+* 9 clinical centres
+* 20 patients per centre randomised 1:1 to treatment or placebo
+* Primary outcome: change in blood pressure (SBP) from baseline (mm)
+* Model: variation between patients normally distributed 
+
+## Simulated data: evidence of a treatment effect?
+```{r echo=FALSE, message = FALSE, fig.height=4.5}
+library(patchwork)
+library(tidyverse)
+set.seed(10123)
+sim2 <- tibble(Centre = rep(1:9, each = 20),
+               Treat = rep(rep(c("Treat","Placebo"),each = 10),9),
+               Change_mm = rep(rep(c(-10,0), each = 10),9) + rnorm(180,0,6))
+p1 <- list()
+for (i in 1:9) {
+   p1[[i]] <- ggplot(sim2 %>% filter(Centre == i), aes(Treat, Change_mm))+
+      geom_point(aes(col = Treat))+
+      theme(legend.position = "none")
+}
+
+p1[[1]] + p1[[2]] + p1[[3]] + p1[[4]] + p1[[5]] + p1[[6]] + p1[[7]] + p1[[8]]+p1[[9]]
+
+```
+
+ 
+## Model for simulation experiment
+
+$$ (\Delta SBP | treatment) = -10 + rnorm(mean = 0, sd = 6) $$
+
+$$ (\Delta SBP | placebo) =  rnorm(mean = 0, sd = 6) $$
+
+::: block
+### "Signal" = mean difference = 10
+### "Noise" = variation around mean = random "normal" variation
+:::
+
+## A few observations
+
+* Model for each simulation exactly the same
+* Some centres - more convincing evidence
+* Variation - may interfere with seeing "signal"
+* Can we combine data across sites?
+* Will combining data add to the "signal" or "noise"?
+
+## Fit a model to the data
+
+```{r message = FALSE}
+library(lmerTest)
+model1 <- lmer(Change_mm~Treat + (1|Centre), data = sim2)
+anova(model1)
+```
+
+## Can the model recover the "truth"?
+```{r}
+library(emmeans)
+emmeans(model1, ~Treat)
+```
+
+
+## Let's simulate some more data
+
+* Testing a new treatment for COVID-19
+* 9 centres
+* Randomise between 10-50 patients to treatment or placebo
+* Primary outcome: full recovery within 7 days 
+* Model: Binomial model, probability of recovery = p
+      
+
+## Simulated data: what patterns do you see?
+
+```{r echo = FALSE, message=FALSE, fig.height = 4.8}
+library(patchwork)
+set.seed(10992202)
+p_T <- 0.7 #recovery rate for treatment
+p_C <-0.4   #recovery rate for controls
+n <- c(10, 50, 14, 40, 36, 26, 16, 48,10)
+n_2 <- rep(n/2, each = 2)
+sim2 <- tibble(Treat = rep(rep(c("Treat","Placebo"),9),n_2),
+               Recovered = rbinom(n=sum(n), size = 1, 
+                                  prob = rep(rep(c(p_T,p_C),9),n_2)),
+               Centre = rep(1:9,n))
+sim2_summary <- sim2 %>%
+   group_by(Centre, Treat) %>%
+   summarise(recover = sum(Recovered)/n(), se1 = sqrt(recover * (1-recover)/n()))
+               
+p2 <- list()
+for (i in 1:9) {
+  p2[[i]] <- ggplot(sim2_summary %>% filter(Centre == i), aes(Treat, recover))+
+   geom_bar(stat = "identity",aes(fill = Treat))+
+   geom_errorbar(aes(ymin = recover-se1, ymax = recover + se1), width = .2)+
+   theme(legend.position = "none")
+}
+
+p2[[1]] + p2[[2]] + p2[[3]] + p2[[4]] + p2[[5]] + p2[[6]] + p2[[7]] + p2[[8]]+p2[[9]]
+
+```
+
+## Model for simulation experiment - "biased coin" flipping
+
+$$ Prob(recovery | treatment) = 0.70 $$
+
+$$ Prob(recovery| placebo) =  0.40 $$
+
+## A few observations
+
+* Model for each simulation same
+* Number of patients per centre vary
+* Role of chance - may interfere with signal
+* How does number of patients affect "signal"? 
+* Will combining data add to the "signal" or "noise"?
+
+## Fit a model to the data
+
+```{r message = FALSE}
+library(car)
+model2 <- glmer(Recovered ~ Treat + (1|Centre), family = binomial,
+                data = sim2)
+Anova(model2)
+```
+
+
+## Can the model recover the "truth"?
+```{r}
+library(emmeans)
+emmeans(model2, ~Treat, type = "response")
+```
+
+## Re-visit precipitation vs yield data
+
+```{r, message = FALSE, fig.height=1.4, fig.width=2, fig.align = 'center'}
+
+set.seed(202073)
+annual_rain<-seq(11,100, 1)
+yield <- 2 + 5*annual_rain - 0.04* annual_rain^2 + rnorm(90,0,10)
+yield_dat<-tibble(annual_rain = annual_rain, yield=yield)
+ggplot(yield_dat, aes(annual_rain, yield))+geom_point()
+```
+
+## What happens when we increase the "noise"?
+
+```{r, message = FALSE, fig.height=1.4, fig.width=2, fig.align = 'center'}
+set.seed(202073)
+annual_rain<-seq(11,100, 1)
+yield <- 2 + 5*annual_rain - 0.04* annual_rain^2 + rnorm(90,0,40)
+yield_dat<-tibble(annual_rain = annual_rain, yield=yield)
+ggplot(yield_dat, aes(annual_rain, yield))+geom_point()
+```
+
+
+
+## Inference and Evidence
+
+* Inference: deciding observed "signal" is REAL 
+* Fail to INFER signal $\ne$ "no signal"
+* Evidence of signal: depends on signal:noise ratio
+* Weak evidence: LOW signal:noise ratio
+* STRONG evidence:  HIGH signal:noise ratio
+* INFER signal is "real" when there is STRONG evidence
+* INFERENCE $\ne$ PROOF
+
+
+## Inference with Noisy Data
+
+* more noise means harder to INFER signal is real
+* More data = more information, higher signal:noise ratio
+* Replication important for inference
+* Combining experiments: combine information about signal
+
+## Summary - let's answer our key questions
+
+* How do we decide whether a treatment effect is real?
+   * **strong EVIDENCE that effect is real**
+* How do we decide if a "pattern" in our data is real or imagined?
+   *  **Model data, model fit includes measures of evidence**
+* Given the experimental data, what can we *infer* about the effect of treatments?
+   * **INFERENCE = strong evidence of treatment effect**
+* What counts as evidence?
+   * **evidence measured by signal:noise ratio**
+ 
