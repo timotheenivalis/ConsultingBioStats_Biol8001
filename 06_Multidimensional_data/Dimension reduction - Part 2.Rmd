@@ -1,0 +1,268 @@
+---
+title: "Multivariate Analysis Part II"
+author: "T. Neeman"
+date: "October 2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this set of lectures, we focus on visualising and understanding high dimensional data. There are two basic scenarios we consider:
+(1) We've measured a large number of characteristics (p) (aka features) on a set of samples (n). In high-dimensional data,it is often the case that p >> n. For example we measure gene expression for 10,000 genes on a small (e.g. 20) number of samples. We want to visualise patterns between samples, whether they ‘naturally’ cluster according to known biological conditions.
+(2) We've measured a large number of characteristics (p) on different types of samples. For example, we have a sample (n) of different species of orchids (n1 + n2+...ng = n) and we measure many different traits (p). We would like to understand which combination of traits characterise each species and build a classifier that predicts species from the set of traits.
+
+The difference between these two scenarios is the samples are either unlabelled (scenario 1) or labelled (scenario 2). These two scenarios are also known as **unsupervised** and **supervised** learning. 
+
+## Import libraries
+
+```{r message = FALSE}
+library(tidyverse)
+library(palmerpenguins)
+library(GGally)
+library(MASS)
+library(patchwork)
+```
+
+The tools we'll use for these 2 scenarios are:
+
+(1) Principal Components Analysis
+(2) Linear Discriminant Analysis
+
+Both are dimensional-reduction tools.
+
+To illustrate the statistical and geometric thinking behind these dimension-reduction tools, we'll use the penguin data set in the palmerpenguins package.
+
+```{r}
+glimpse(penguins)
+summary(penguins)
+```
+
+There are 344 observations and 8 columns. Four biometric measurements were made on each penguin: bill length, bill depth, flipper length and body mass. 
+
+The code below summarises the number of penguins measured by species, island and year.
+
+```{r}
+penguins %>%
+  group_by(species, island, year) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  pivot_wider(names_from = c("species"), 
+              values_from = "count")
+```
+ 
+We observe that species Adelie is present on all three islands, whereas species Chinstrap and Gentoo are only on a single island.
+
+We also summarise the data by species and sex.
+```{r}
+penguins %>%
+  group_by(species, sex) %>%
+  summarise(count = n(), .groups = "drop")
+```
+
+ 
+In the last lecture, we projected the 4-dimensional data cloud onto a 2-dimensional space that captured the most information about the data, or minimised the distance from the data to a two-dimensional subspace. 
+
+But when we want to predict species, given a set of characteristics, this projection might mask interesting differences. 
+
+We see that the bill length vs bill depth plot does a better job at distinguishing between species compared with the flipper length vs body mass plot. 
+
+```{r warning=FALSE, message=FALSE}
+penguins %>%
+  dplyr::select(species, bill_length_mm:body_mass_g) %>%
+ggpairs(aes(col = species), columns = 2:5)
+```
+
+Can we find an optimal projection that "best" separates the species?
+
+### Linear Discriminant Analysis
+
+In linear discriminant analysis (LDA) we consider linear projections into lower dimensional space that separates the groups.
+
+If there are *k* groups, then then linear projection will be into *k-1* dimensional space. If k>3, then we can visualise the first 2 components. 
+Data wrangling: Make year a factor. Scaling the numerical data will make it easier to interpret the weighting of each variable in the LDA.
+```{r}
+my_dat <- penguins %>%
+  mutate(year = factor(year)) %>%
+  mutate(across(where(is.numeric), scale)) %>%
+  na.omit()
+```
+
+
+```{r}
+lda1 <- lda(species ~ bill_length_mm + 
+                      bill_depth_mm + 
+                      flipper_length_mm + 
+                      body_mass_g, 
+              data = my_dat)
+```
+
+
+Let's look at the lda1 object
+```{r}
+glimpse(lda1)
+```
+
+
+### Key object within lda1:
+
+**lda1$scaling**: These are like the **LOADINGS** from PCA; they are the **weights** of the discriminant function.
+```{r}
+lda1$scaling
+```
+
+
+**SCORES**: There is no explicit object in the lda1 output. However, there are 2 linear discriminant functions of the variables (see above) that will generate the "scores".
+
+You can calculate these using the predict() function.
+```{r}
+lda1_output <- predict(lda1)$x %>%
+            as_tibble() %>%
+            mutate(pred_species = predict(lda1)$class,
+                   true_species = my_dat$species)
+```
+
+
+Confusion matrix
+```{r}
+with(lda1_output,table(pred_species, true_species))
+```
+
+Plot the discriminant values.
+```{r}
+plot_lda1 <- lda1_output %>%
+  ggplot(aes(LD1, LD2, col = true_species)) +
+  geom_point()+
+  theme_bw()
+
+plot_lda1
+```
+
+
+How does the lda model compare with the PCA model?
+
+Create PCA model and extract the scores:
+```{r}
+pca1_dat <- my_dat %>%
+  dplyr::select(bill_length_mm:body_mass_g)
+
+pca1 <- prcomp(pca1_dat, scale = TRUE)
+
+pca1_scores <- pca1$x %>%
+  as_tibble() %>%
+  mutate(true_species = my_dat$species)
+```
+
+
+
+Create the plot of the PCA model:
+```{r}
+plot_pca1 <- pca1_scores %>%
+  ggplot(aes(PC1, PC2, colour = true_species))+
+  geom_point()+
+  theme_bw()
+```
+
+Juxtapose the graphs of the two models using the patchwork package:
+```{r}
+plot_both <- plot_lda1 + plot_pca1
+plot_both + plot_layout(guides = "collect")
+```
+
+
+
+## Overfitting the model in LDA
+
+Example: Colour PCA scores by year
+
+```{r}
+pca1_scores %>%
+  mutate(year = my_dat$year) %>%
+  ggplot(aes(PC1, PC2, col=year))+
+  geom_point() +
+  theme_bw()
+```
+
+add lots of noise:
+```{r}
+Noise <- matrix(rnorm(333000),333,1000) %>%
+          as_tibble()
+
+my_dat2 <- bind_cols(my_dat, Noise)
+```
+
+The new variables are meaningless noise, but by adding many random features, we increase the dimensionality of the data cloud. Intuitively, this means that there are many more projections into 2-dimensional space. There is therefore more freedom to separate data by their classification. This extra freedom allow a model to overfit the data.
+
+Can we discriminate year?
+
+We see how well we can discriminate year using the original data
+```{r}
+lda1_year <- lda(year ~ ., data = my_dat %>% dplyr::select(-c(species,island,sex)))
+```
+
+You can calculate projected data using the predict() function.
+```{r}
+lda1_year_output <- predict(lda1_year)$x %>%
+            as_tibble() %>%
+            mutate(true_year = factor(my_dat2$year))
+```
+
+
+Plot the projected data, and colour with the true classification. We see that there is incomplete separation by year. 
+```{r}
+lda1_year_output %>%
+  ggplot(aes(LD1, LD2, col=true_year))+
+  geom_point()+
+  theme_bw()
+```
+
+We now fit a linear discriminant model and include 300 Noise variables in our model. I chose 300 because there are 333 observations. The idea is that when the number of features (p) is similar to the number of samples (n), it is inevitable that the model will overfit the data.
+
+```{r}
+lda2_year <- lda(year ~ ., data = my_dat2 %>% dplyr::select(year,V1:V300))
+```
+
+You can calculate the projected data using the predict() function.
+```{r}
+lda2_year_output <- predict(lda2_year)$x %>%
+            as_tibble() %>%
+            mutate(true_year = my_dat$year,
+                   pred_year = predict(lda2_year)$class)
+```
+
+
+Now graph the discriminant values. The projected data separates the samples by year very effectively. However, we know that the noise variables add no meaning to year. This is a very clear example of overfitting.
+```{r}
+lda2_year_output %>%
+  ggplot(aes(LD1, LD2, col=true_year))+
+  geom_point()+
+  theme_bw()
+```
+
+Look at the confusion matrix:
+```{r}
+with(lda2_year_output,table(pred_year, true_year))
+```
+
+
+Another question arises: What happens to the PCA representation when we include the Noise data?
+```{r}
+pca3_dat <- my_dat2 %>%
+  dplyr::select(bill_length_mm:body_mass_g, V1:V200) 
+
+pca3 <- prcomp(pca3_dat, scale = TRUE)
+
+summary(pca3)$importance[,1:10]
+```
+
+Compare the noisy plot with the plot using only original data
+```{r}
+plot_noisy <- pca3$x %>% as_tibble() %>%
+           mutate(true_species = my_dat$species) %>%
+  ggplot(aes(-1*PC1, PC2, colour = true_species))+
+  geom_point()+
+  theme_bw()
+
+plot_pca1 + plot_noisy + plot_layout(guides = "collect")
+```
+

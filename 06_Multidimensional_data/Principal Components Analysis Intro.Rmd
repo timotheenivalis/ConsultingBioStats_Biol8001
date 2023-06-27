@@ -1,0 +1,305 @@
+---
+title: "Multivariate Analysis Part I"
+author: "T. Neeman"
+date: "October 2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this set of lectures, we focus on visualising and understanding high dimensional data. There are two basic scenarios we consider:
+
+(1) We've measured a large number of characteristics (p) (aka features) on a set of samples (n). In high-dimensional data,it is often the case that p >> n. For example we measure gene expression for 10,000 genes on a small (e.g. 20) number of samples. We want to visualise patterns between samples, whether they ‘naturally’ cluster according to known biological conditions.
+
+(2) We've measured a large number of characteristics (p) on different types of samples. For example, we have a sample (n) of different species of orchids (n1 + n2+...ng = n) and we measure many different traits (p). We would like to understand which combination of traits characterise each species and build a classifier that predicts species from the set of traits.
+
+The difference between these two scenarios is the samples are either unlabelled (scenario 1) or labelled (scenario 2). These two scenarios are also known as **unsupervised** and **supervised** learning. 
+
+## Import libraries
+
+```{r message = FALSE}
+library(tidyverse)
+library(palmerpenguins)
+library(GGally)
+library(patchwork)
+```
+
+The tools we'll use for these 2 scenarios are:
+
+(1) Principal Components Analysis
+(2) Linear Discriminant Analysis
+
+Both are dimensional-reduction tools.
+
+To illustrate the statistical and geometric thinking behind these dimension-reduction tools, we'll use the penguin data set in the palmerpenguins package.
+
+```{r}
+glimpse(penguins)
+summary(penguins)
+```
+
+There are 344 observations and 8 columns. Four biometric measurements were made on each penguin: bill length, bill depth, flipper length and body mass. 
+
+The code below summarises the number of penguins measured by species, island and year.
+
+```{r}
+penguins %>%
+  group_by(species, island, year) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  pivot_wider(names_from = c("species"), 
+              values_from = "count")
+```
+ 
+We observe that species Adelie is present on all three islands, whereas species Chinstrap and Gentoo are only on a single island.
+
+We also summarise the data by species and sex.
+```{r}
+penguins %>%
+  group_by(species, sex) %>%
+  summarise(count = n(), .groups = "drop")
+```
+  
+How can we characterise penguin morphology from the **four** biometric measurements? If the biometric measurements are correlated, then perhaps we can summarise the data into fewer dimensions. 
+
+In the first instance, we consider the pairwise correlations between each pair of measures:
+
+```{r message = FALSE, warning = FALSE}
+penguins %>%
+  select(bill_length_mm:body_mass_g) %>%
+ggpairs()
+```
+
+We observe multimodal distributions in each measurement as well as clusters of points in  each data cloud. We can also colour the distributions/points by species:
+
+```{r warning=FALSE, message=FALSE}
+penguins %>%
+  dplyr::select(species, bill_length_mm:body_mass_g) %>%
+ggpairs(aes(col = species), columns = 2:5)
+```
+
+From this matrix plot, we can see that within each species, each pair of measurements are positively correlated, indicating that size variation within species. 
+
+We also notice shape variation between species, for example, Gentoo tends to have longer flippers but shallower bills compared to the other two species. 
+
+### Principal Components Analysis
+
+When measurements are correlated, then the information contained in these measurements is redundant. Consider two measurements: flipper length and body mass.
+
+```{r}
+penguins %>%
+  ggplot(aes(x = flipper_length_mm, y = body_mass_g))+
+  geom_point()+
+  theme_bw()
+```
+
+We see from this plot that flipper length (FL) and body mass (BM) are highly correlated – both are measures of penguin size. A single measure representing penguin size can substitute for the two measurements. 
+
+How could we extract "size" measurement from the two measurements FL and BM?
+
+Size: $= \alpha \times FL + \beta \times BM$
+
+Equivalent statements:
+
+* Find a line (subspace) through the data points such that the orthogonal projection onto the line has maximum variance.
+
+* Find a line (subspace) through the data points such that the distance from the points to their orthogonal projection onto the line is minimised.
+
+* Find a 1-dimensional representation that best represents the two-dimensional cloud. 
+
+We use just the complete cases from now on. prcomp() function cannot deal with missing values. 
+
+We also scale the numerical data to make it easier to interpret the weighting of the variables in the PCA. 
+```{r}
+my_dat <- penguins %>%
+  mutate(year = factor(year)) %>%
+  mutate(across(where(is.numeric), scale)) %>%
+  na.omit()
+```
+
+When we perform a PCA on these data, we extract two orthogonal 1-dimensional subspaces: the first 1-dim subspace is the "best" 1-dimensional projection of the data. The second 1-dim subspace captures the remaining variation:
+
+```{r}
+pca1 <- my_dat %>% 
+  dplyr::select(flipper_length_mm, body_mass_g) %>%
+  prcomp(scale = TRUE)
+```
+
+Let's look at the pca1 object
+```{r}
+glimpse(pca1)
+```
+### Two key objects within pca1:
+
+**pca1$rotation**: These are the **LOADINGS** or the linear combinations of the (scaled) measures.
+```{r}
+pca1$rotation
+```
+The first linear subspace is a line that gives equal weight to (scaled) FL and BM.
+The second linear subspace is a line that is the difference between (scaled) FL and BM
+
+**pca1$x**: These are the **SCORES** or the projections of the data onto each subspace. 
+```{r}
+head(pca1$x)
+```
+
+Let's look at the data and the PCA scores side-by-side. First, I convert the scores and loadings to tibbles.
+```{r}
+pca1_scores <- pca1$x %>%
+  as_tibble()
+
+pca1_loadings <- pca1$rotation %>%
+  as_tibble() %>%
+  mutate(names = rownames(pca1$rotation))
+```
+
+The first graph is of the original data. The second graph shows the scores and the loadings on the same graph. This graph is called a **biplot**.
+
+```{r}
+p1 <- ggplot(my_dat, aes(x = scale(flipper_length_mm), y = scale(body_mass_g))) +
+  geom_point()+
+  geom_abline(slope = 1, intercept = 0, col = "blue")+
+  theme_bw()
+
+p2 <- ggplot(pca1_scores, aes(PC1, PC2))+
+  geom_point()+
+  geom_segment(data = pca1_loadings, 
+               aes(x = 0, y = 0, xend = PC1, yend = PC2), 
+               arrow = arrow(),
+               colour = "red") +
+  geom_hline(yintercept = 0, colour = "blue")+
+  ylim(-2,2)+
+  annotate("text", x = pca1_loadings$PC1, y = pca1_loadings$PC2, 
+           label = pca1_loadings$names,
+           colour = "red", size = 3, hjust = -0.2) + 
+  theme_bw()
+
+
+p1 + p2
+```
+
+
+In this case, the **biplot** is just a linear transformation of the original data. 
+
+How much of the total variation in the data is captured by each PC? The first principal component represents penguin size and "explains 93.6% of the total variation" in the data.
+
+The second principal component explains the remaining 6.4% of the total variation.
+```{r}
+summary(pca1)
+```
+
+Now we'll project all four measurements into a 2-dimensional subspace and interpret the 2-dimensional representation of the data:
+```{r}
+  pca2 <- my_dat %>% 
+  dplyr::select(bill_length_mm: body_mass_g) %>%
+  prcomp(scale=TRUE)
+```
+
+
+**Scores**: the data projections onto the PC axes
+```{r}
+pca2_scores <- pca2$x %>%
+  as_tibble()
+
+head(pca2_scores)
+```
+
+The scores PC1 - PC4 are a linear transformation of the original data in 4 dimensions. If we plot only the first 2 dimensions, how "true" is this representation of the original data?
+
+Equivalently, how much information is lost by keeping only the first 2 dimensions?
+```{r}
+summary(pca2)
+```
+PC1 "explains 69% of the variation" in the original data. PC2 explains 19% of the variation in the original data. Together they represent 88% of the variation. 
+
+This means that the projection of the data onto the first 2 PC-dimensions is a good representation of the orginal data. 
+
+Equivalently,
+
+* Scores are "close" to the original data.
+* Penguins that have similar morphology have similar PC1/2 scores.
+* The 4-dimensional cloud of data resembles an "elongated pancake" in 4-dimensional space.
+
+Let's look at the loadings ("rotation") of pca2.
+
+**Loadings** : variable weights for PC1 - PC4
+
+```{r}
+pca2_loadings <- round(pca2$rotation,3) %>%
+   as_tibble %>%
+  mutate(names = rownames(pca2$rotation))
+
+pca2_loadings
+```
+
+* When variables have similar loadings, they are highly correlated with one another, e.g. flipper length and body mass.
+
+* The sum of the the squared loadings of each row = 1.
+
+* Variable with high weight values in PC3, PC4 will not be well-represented in the PC1/PC2 biplot. 
+
+* When measurements are independent, then they load onto different PCs. 
+
+Representation of penguin data in biplot:
+```{r}
+ggplot(pca2_scores, aes(PC1, PC2))+
+  geom_point()+
+  geom_segment(data = pca2_loadings, 
+               aes(x = 0, y = 0, xend = PC1, yend = PC2), 
+               arrow = arrow(),
+               colour = "red") +
+  ylim(-2,2)+
+  annotate("text", x = pca2_loadings$PC1, y = pca2_loadings$PC2, 
+           label = pca2_loadings$names,
+           colour = "red", size = 3,
+           vjust = 1, hjust = -0.2) + 
+  theme_bw()
+```
+Note: the PC scores are often scaled to make the axes more equal.
+```{r}
+pca2_scores2 <- pca2_scores %>%
+  mutate(PC1 = PC1/pca2$sdev[1],
+         PC2 = PC2/pca2$sdev[2],
+         species = my_dat$species,
+         sex = my_dat$sex,
+         island = my_dat$island)
+```
+
+
+```{r}
+ggplot(pca2_scores2, aes(PC1, PC2, col = species))+
+ geom_point()+
+  geom_segment(data = pca2_loadings, 
+               aes(x = 0, y = 0, xend = PC1, yend = PC2), 
+               arrow = arrow(),
+               colour = "red") +
+  annotate("text", x = pca2_loadings$PC1, y = pca2_loadings$PC2, 
+           label = pca2_loadings$names,
+           colour = "red", size = 3,
+           vjust = 1, hjust = -0.2) + 
+  theme_bw()
+```
+
+What does this biplot tell us about our data? The Gentoo species are distinguished by their larger size: they are heavier and have longer flippers than their counterparts. Bill shape also distinguishes the species: Adelie and Chinstrap have different length bills, whereas both have deeper bills when compared with Gentoo.  
+
+What happens if we colour the points by sex? or island?
+
+PCA is useful in a number of contexts, because often you get a substantial proportion of variance explained in the first two or three components even in very high dimensional space.
+
+* PCA helps you visualise the data
+
+* PCA can remove a lot of redundancy/noise, so you might use the first n components in subsequent analyses (e.g regression).
+
+* PCA can help identify unwanted noise, e.g. batch effects.
+
+
+Some comments/caveats:
+
+* PCA takes continuous numeric data (not factors etc.)
+
+* PCA assumes linear relationships between variables.
+
+* You may need to e.g., log-transform before doing PCA.
+
+* PCA requires centered data, and benefits from scaling; prcomp() does the centering by default and can scale.
